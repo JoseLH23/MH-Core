@@ -3,6 +3,7 @@ from mh_core.dashboard.dashboard_routes import router as dashboard_router
 from mh_core.routes.research_routes import router as research_router
 from mh_core.routes.core_routes import router as core_router
 from mh_core.routes.automation_routes import router as automation_router
+from mh_core.routes.agent_routes import router as agent_router
 
 
 app = FastAPI(
@@ -15,6 +16,7 @@ app.include_router(research_router)
 app.include_router(dashboard_router)
 app.include_router(core_router)
 app.include_router(automation_router)
+app.include_router(agent_router)
 
 @app.get("/")
 def home():
