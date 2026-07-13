@@ -11,6 +11,7 @@ from mh_core.config import (
     YOUTUBE_RELEVANCE_LANGUAGE
 )
 from mh_core.utils.logger import logger
+from mh_core.utils.retry import reintentar_con_backoff
 
 
 class YouTubeResearchEngine:
@@ -71,7 +72,13 @@ class YouTubeResearchEngine:
             "relevanceLanguage": YOUTUBE_RELEVANCE_LANGUAGE,
             "key": self.api_key,
         }
-        r = requests.get(url, params=params, timeout=30)
+        def _pedir():
+            resp = requests.get(url, params=params, timeout=30)
+            if resp.status_code == 429:
+                raise RuntimeError(f"429 Too Many Requests: {resp.text[:200]}")
+            return resp
+
+        r = reintentar_con_backoff(_pedir, nombre=f"YouTube search('{query}')")
         data = r.json()
         if r.status_code != 200:
             raise RuntimeError(data)
@@ -84,7 +91,13 @@ class YouTubeResearchEngine:
             "id": ",".join(video_ids),
             "key": self.api_key,
         }
-        r = requests.get(url, params=params, timeout=30)
+        def _pedir():
+            resp = requests.get(url, params=params, timeout=30)
+            if resp.status_code == 429:
+                raise RuntimeError(f"429 Too Many Requests: {resp.text[:200]}")
+            return resp
+
+        r = reintentar_con_backoff(_pedir, nombre="YouTube video details")
         data = r.json()
         if r.status_code != 200:
             raise RuntimeError(data)

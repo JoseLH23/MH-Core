@@ -110,9 +110,36 @@ def test_respuesta_vacia_usa_fallback():
 
 
 def test_error_de_api_cae_a_fallback_sin_tronar():
-    generador = GeminiContentGenerator(api_key="clave", cliente=_ClienteGeminiQueFalla())
+    generador = GeminiContentGenerator(api_key="clave", cliente=_ClienteGeminiQueFalla(), reintentos=1)
 
     contenido = generador.generar(BRAIN_REPORT_EJEMPLO)
 
     assert isinstance(contenido, ContentPiece)
     assert "generado por plantilla" in contenido.script
+
+
+def test_reintenta_antes_de_caer_al_fallback():
+    """Confirma que sí hay reintentos reales (no solo un intento) —
+    con espera casi nula para no volver el test lento."""
+
+    class _ClienteQueFallaDosVecesYLuegoResponde:
+        def __init__(self):
+            self.llamadas = 0
+
+        class models:
+            llamadas = 0
+
+            @staticmethod
+            def generate_content(model, contents):
+                _ClienteQueFallaDosVecesYLuegoResponde.models.llamadas += 1
+                if _ClienteQueFallaDosVecesYLuegoResponde.models.llamadas < 3:
+                    raise RuntimeError("429 simulado")
+                return _RespuestaFalsa("TITULO: Al tercer intento\nGUION:\nFuncionó")
+
+    cliente = _ClienteQueFallaDosVecesYLuegoResponde()
+    generador = GeminiContentGenerator(api_key="clave", cliente=cliente, reintentos=3, espera_inicial=0.01)
+
+    contenido = generador.generar(BRAIN_REPORT_EJEMPLO)
+
+    assert contenido.title == "Al tercer intento"
+    assert cliente.models.llamadas == 3

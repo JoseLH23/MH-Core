@@ -20,6 +20,16 @@ class DashboardService:
 
     @staticmethod
     def overview():
+        """
+        HALLAZGO REAL (auditoría): este dashboard se escribió antes de
+        Memory Engine, Orchestrator, Automation Engine, Agentes,
+        integración con Gemini/Groq y el flujo de MindHigh — seguía
+        diciendo "PENDING" para PredictionEngine y MHBrain, que llevan
+        varias fases funcionando de verdad. También tenía un
+        "overall_progress": "60%" fijo, sin ninguna fórmula real
+        detrás — un número inventado, no un dato. Se quita en vez de
+        inventar otro número igual de arbitrario.
+        """
         learning_engine = LearningEngine()
         learning_summary = learning_engine.summarize_learning()
 
@@ -27,7 +37,6 @@ class DashboardService:
             "system": "MH Core",
             "version": "2.0",
             "status": "ONLINE",
-            "overall_progress": "60%",
             "modules": {
                 "api": "READY",
                 "research_engine": "READY",
@@ -35,12 +44,20 @@ class DashboardService:
                 "ranking_engine": "READY",
                 "pattern_engine": "READY",
                 "decision_engine": "READY",
+                "prediction_engine": "READY",
+                "mh_brain": "READY",
                 "learning_engine": "READY",
-                "dashboard": "IN_PROGRESS",
-                "prediction_engine": "PENDING",
-                "mh_brain": "PENDING"
+                "memory_engine": "READY",
+                "orchestrator": "READY",
+                "automation_engine": "READY",
+                "agents": "READY",
+                "dashboard": "READY",
+                # Honestos sobre lo que de verdad no existe todavía,
+                # en vez de omitirlos.
+                "vector_db": "PENDING",
+                "postgres": "PENDING",
             },
-            "learning_summary": learning_summary
+            "learning_summary": learning_summary,
         }
        
     @staticmethod
@@ -57,14 +74,20 @@ class DashboardService:
             "system": "MH Core",
             "status": "ONLINE",
             "api": "OK",
-            "database": "OK",
+            "database": "OK (JSON local — ver Master Plan sobre migración futura a Postgres)",
             "engines": {
                 "research": "OK",
                 "scoring": "OK",
                 "ranking": "OK",
                 "patterns": "OK",
                 "decision": "OK",
-                "learning": "OK"
+                "prediction": "OK",
+                "mh_brain": "OK",
+                "learning": "OK",
+                "memory": "OK",
+                "orchestrator": "OK",
+                "automation": "OK",
+                "agents": "OK",
             }
         }
     

@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Correr el suite completo
+        env:
+          PYTHONPATH: .
+          # Sin API keys reales aquí a propósito — los tests nunca
+          # deben depender de red real ni de cuotas de Gemini/Groq/
+          # YouTube (todos usan dobles inyectados). Si algún test
+          # llegara a necesitar una key real, es un bug del test,
+          # no algo que este workflow deba resolver con secrets.
+        run: pytest -q
+
+      - name: Confirmar que la app importa sin errores
+        env:
+          PYTHONPATH: .
+        run: python -c "import mh_core.app; print('mh_core.app importa correctamente')"

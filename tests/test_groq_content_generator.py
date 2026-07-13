@@ -102,7 +102,7 @@ def test_respuesta_vacia_usa_fallback():
 
 def test_error_http_429_cae_a_fallback_sin_tronar():
     sesion_falsa = _SesionHTTPFalsa("no importa", status_code=429)
-    generador = GroqContentGenerator(api_key="clave", sesion_http=sesion_falsa)
+    generador = GroqContentGenerator(api_key="clave", sesion_http=sesion_falsa, reintentos=1)
 
     contenido = generador.generar(BRAIN_REPORT_EJEMPLO)
 
@@ -111,8 +111,30 @@ def test_error_http_429_cae_a_fallback_sin_tronar():
 
 
 def test_excepcion_de_red_cae_a_fallback_sin_tronar():
-    generador = GroqContentGenerator(api_key="clave", sesion_http=_SesionHTTPQueFalla())
+    generador = GroqContentGenerator(api_key="clave", sesion_http=_SesionHTTPQueFalla(), reintentos=1)
 
     contenido = generador.generar(BRAIN_REPORT_EJEMPLO)
 
     assert "generado por plantilla" in contenido.script
+
+
+def test_reintenta_antes_de_caer_al_fallback():
+    """Confirma que sí hay reintentos reales, con espera casi nula."""
+
+    class _SesionQueFallaDosVecesYLuegoResponde:
+        def __init__(self):
+            self.llamadas = 0
+
+        def post(self, url, headers, json, timeout):
+            self.llamadas += 1
+            if self.llamadas < 3:
+                raise RuntimeError("429 simulado")
+            return _RespuestaHTTPFalsa("TITULO: Al tercer intento\nGUION:\nFuncionó")
+
+    sesion = _SesionQueFallaDosVecesYLuegoResponde()
+    generador = GroqContentGenerator(api_key="clave", sesion_http=sesion, reintentos=3, espera_inicial=0.01)
+
+    contenido = generador.generar(BRAIN_REPORT_EJEMPLO)
+
+    assert contenido.title == "Al tercer intento"
+    assert sesion.llamadas == 3
