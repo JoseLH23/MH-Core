@@ -13,6 +13,7 @@ from uuid import uuid4
 from mh_core.core.config import HISTORY_FILE
 from mh_core.database.json_memory_repository import JsonMemoryRepository
 from mh_core.database.memory_repository import MemoryRepository
+from mh_core.memory.vector_store import VectorMemoryStore
 from mh_core.models.memory import Memory
 from mh_core.utils.logger import logger
 
@@ -61,6 +62,30 @@ class MemoryEngine:
 
     def recall_by_topic(self, topic: str) -> list[Memory]:
         return self.repository.buscar_por_tema(topic)
+
+    def recall_by_similarity(self, consulta: str, k: int = 5) -> list[tuple[Memory, float]]:
+        """
+        Búsqueda SEMÁNTICA real (TF-IDF + similitud coseno, ver
+        mh_core/memory/vector_store.py) — encuentra memorias
+        relacionadas por significado, no solo por texto exacto del
+        tema. Ej: buscar "salud mental" puede encontrar un recuerdo
+        cuyo topic real fue "neurociencia del estrés", cosa que
+        recall_by_topic() (coincidencia de texto) nunca encontraría.
+
+        El índice se reconstruye en cada llamada — con el volumen real
+        de memorias de este proyecto (decenas/cientos) es barato; si
+        eso deja de ser cierto, aquí es donde se agregaría caché.
+        """
+        memorias = self.all()
+        if not memorias:
+            return []
+
+        documentos = {m.id or str(i): (m.topic or "") for i, m in enumerate(memorias)}
+        indice = VectorMemoryStore(documentos)
+        resultados = indice.buscar_similares(consulta, k=k)
+
+        memorias_por_id = {(m.id or str(i)): m for i, m in enumerate(memorias)}
+        return [(memorias_por_id[doc_id], score) for doc_id, score in resultados]
 
     def recent(self, n: int = 10) -> list[Memory]:
         return self.repository.recientes(n)

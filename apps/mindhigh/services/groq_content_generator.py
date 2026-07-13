@@ -18,7 +18,8 @@ import requests
 
 from apps.mindhigh.models.content_piece import ContentPiece
 from apps.mindhigh.services.content_generator import ContentGenerator
-from apps.mindhigh.services.llm_prompt import construir_prompt, parsear_respuesta_estructurada
+from apps.mindhigh.services.llm_prompt import parsear_respuesta_estructurada
+from apps.mindhigh.services.prompt_manager import prompt_manager
 from mh_core.utils.logger import logger
 from mh_core.utils.retry import reintentar_con_backoff
 
@@ -63,7 +64,7 @@ class GroqContentGenerator:
                     json={
                         "model": self.model,
                         "messages": [
-                            {"role": "user", "content": construir_prompt(brain_report, duration_target, style)}
+                            {"role": "user", "content": prompt_manager.render("content_generation", brain_report=brain_report, duration_target=duration_target, style=style)}
                         ],
                     },
                     timeout=30,

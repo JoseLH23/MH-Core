@@ -1,15 +1,21 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from apps.mindhigh.mindhigh_orchestrator import MindHighOrchestrator
 from apps.mindhigh.models.content_piece import DURACIONES_VALIDAS
+from mh_core.core.rate_limiter import RateLimiter
+from mh_core.utils.rate_limit_dependency import limitar_generacion_ia
 
 router = APIRouter(prefix="/mindhigh/runs", tags=["MindHigh Orchestrator"])
 
 _orchestrator = MindHighOrchestrator()
+_limiter = RateLimiter(max_llamadas=10, ventana_segundos=300)
 
 
-@router.post("")
+@router.post("", dependencies=[Depends(limitar_generacion_ia)])
 def ejecutar(remember: bool = True, duration_target: str = "short", style: str = "informativo"):
+    if not _limiter.permitido("global"):
+        espera = _limiter.segundos_para_reintentar("global")
+        raise HTTPException(status_code=429, detail=f"Demasiadas ejecuciones seguidas. Reintenta en {espera:.0f}s.")
     if duration_target not in DURACIONES_VALIDAS:
         raise HTTPException(status_code=400, detail=f"duration_target debe ser uno de: {DURACIONES_VALIDAS}")
     run = _orchestrator.ejecutar(remember=remember, duration_target=duration_target, style=style)

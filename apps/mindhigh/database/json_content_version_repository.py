@@ -56,3 +56,9 @@ class JsonContentVersionRepository(ContentVersionRepository):
             if base_id == content_base_id or pieza.id == content_base_id:
                 resultado.append((pieza, QualityEvaluation(**registro["evaluation"])))
         return resultado
+
+    def obtener_por_id(self, content_id: str) -> ContentPiece | None:
+        for registro in self._cargar_crudo():
+            if registro["content"].get("id") == content_id:
+                return ContentPiece(**registro["content"])
+        return None

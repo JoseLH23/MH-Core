@@ -3,7 +3,7 @@ Rutas de MindHigh. "Panel funcional" a nivel de API — datos reales
 listos para que un frontend los consuma; no incluye UI todavía (fuera
 de alcance de este proyecto backend).
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 import os
 
@@ -32,8 +32,17 @@ def estado_proveedores():
     }
 
 
-@router.post("/run")
+from mh_core.core.rate_limiter import RateLimiter
+from mh_core.utils.rate_limit_dependency import limitar_generacion_ia
+
+_limiter_run = RateLimiter(max_llamadas=10, ventana_segundos=300)  # 10 cada 5 min — protege la cuota gratis
+
+
+@router.post("/run", dependencies=[Depends(limitar_generacion_ia)])
 def run(remember: bool = True, duration_target: str = "short", style: str = "informativo"):
+    if not _limiter_run.permitido("global"):
+        espera = _limiter_run.segundos_para_reintentar("global")
+        raise HTTPException(status_code=429, detail=f"Demasiadas ejecuciones seguidas. Reintenta en {espera:.0f}s.")
     if duration_target not in DURACIONES_VALIDAS:
         raise HTTPException(status_code=400, detail=f"duration_target debe ser uno de: {DURACIONES_VALIDAS}")
     try:
