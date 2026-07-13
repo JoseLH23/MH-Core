@@ -1,0 +1,30 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Variables y secretos
+.env
+.env.*
+!.env.example
+*credentials*
+*secret*
+
+# Logs y temporales
+logs/
+temp/
+*.log
+
+# IDE y sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Datos locales generados
+mh_core/database/learning/history.json
+apps/mindhigh/database/*.json
