@@ -1,0 +1,30 @@
+[
+    {
+        "id": "3a4d41bb-a761-4412-b754-c9bfaef95421",
+        "title": "Oportunidad fuerte detectada: inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+        "message": "Probabilidad de éxito 81%, confianza MEDIUM, recomendación: PRODUCIR.",
+        "level": "success",
+        "topic": "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+        "success_probability": 80.52,
+        "confidence": "MEDIUM",
+        "priority": "HIGH",
+        "source": "automation_engine",
+        "dedup_key": "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.:PRODUCIR",
+        "read": false,
+        "created_at": "2026-07-12T23:22:49"
+    },
+    {
+        "id": "4a952728-b1b9-4b47-91a7-3bf47b2c4415",
+        "title": "Oportunidad fuerte detectada: neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+        "message": "Probabilidad de éxito 70%, confianza MEDIUM, recomendación: PRODUCIR_CON_CUIDADO.",
+        "level": "success",
+        "topic": "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+        "success_probability": 70.16,
+        "confidence": "MEDIUM",
+        "priority": "MEDIUM",
+        "source": "automation_engine",
+        "dedup_key": "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.:PRODUCIR_CON_CUIDADO",
+        "read": false,
+        "created_at": "2026-07-12T23:24:11"
+    }
+]

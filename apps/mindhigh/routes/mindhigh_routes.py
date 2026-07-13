@@ -5,14 +5,31 @@ de alcance de este proyecto backend).
 """
 from fastapi import APIRouter, HTTPException
 
+import os
+
 from apps.mindhigh.models.content_piece import DURACIONES_VALIDAS
 from apps.mindhigh.engines.metrics_engine import MetricsEngine
+from apps.mindhigh.engines.performance_engine import PerformanceEngine
 from apps.mindhigh.mindhigh_pipeline import MindHighPipeline
 
 router = APIRouter(prefix="/mindhigh", tags=["MindHigh"])
 
 _pipeline = MindHighPipeline()
 _metrics_engine = MetricsEngine()
+_performance_engine = PerformanceEngine()
+
+
+@router.get("/providers/status")
+def estado_proveedores():
+    """Solo verifica si cada proveedor TIENE una key configurada — no
+    hace ninguna llamada real (no gasta cuota gratis solo por
+    consultar el estado)."""
+    return {
+        "youtube": "configured" if os.environ.get("YOUTUBE_API_KEY") else "not_configured",
+        "gemini": "configured" if os.environ.get("GEMINI_API_KEY") else "not_configured",
+        "groq": "configured" if os.environ.get("GROQ_API_KEY") else "not_configured",
+        "template_fallback": "always_available",
+    }
 
 
 @router.post("/run")
@@ -33,3 +50,35 @@ def metrics():
 @router.get("/metrics/{content_id}")
 def metrics_for_content(content_id: str):
     return {"content_id": content_id, "metrics": [m.model_dump() for m in _metrics_engine.for_content(content_id)]}
+
+
+@router.post("/metrics/{content_id}/real")
+def registrar_metrica_real(
+    content_id: str,
+    views: int = 0,
+    likes: int = 0,
+    comments: int = 0,
+    impressions: int = 0,
+    retention_percent: float | None = None,
+    avg_view_duration_seconds: float | None = None,
+    conversions: int | None = None,
+):
+    """Registra una métrica REAL (no simulada) cuando exista
+    publicación real y datos verdaderos que reportar."""
+    try:
+        metrica = _performance_engine.registrar_metrica_real(
+            content_id, views, likes, comments, impressions, retention_percent, avg_view_duration_seconds, conversions
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return metrica.model_dump()
+
+
+@router.get("/performance/summary")
+def resumen_rendimiento():
+    return _performance_engine.resumen_para_aprendizaje()
+
+
+@router.get("/performance/compare")
+def comparar_rendimiento(content_id_a: str, content_id_b: str):
+    return _performance_engine.comparar_rendimiento(content_id_a, content_id_b)

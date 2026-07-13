@@ -2,9 +2,11 @@ import time
 
 from mh_core.core.orchestrator import Orchestrator
 from mh_core.database.json_memory_repository import JsonMemoryRepository
+from mh_core.database.json_notification_repository import JsonNotificationRepository
 from mh_core.engines.automation_engine import AutomationEngine
 from mh_core.engines.learning_engine import LearningEngine
 from mh_core.engines.memory_engine import MemoryEngine
+from mh_core.notifications.notification_center import NotificationCenter
 
 VIDEOS_EJEMPLO = [
     {
@@ -27,7 +29,14 @@ def _motor_aislado(tmp_path, obtener_fuente=_fuente_falsa):
     repo = JsonMemoryRepository(tmp_path / "history.json")
     learning_engine = LearningEngine(memory_engine=MemoryEngine(repository=repo))
     orquestador = Orchestrator(learning_engine=learning_engine)
-    return AutomationEngine(orchestrator=orquestador, obtener_fuente=obtener_fuente)
+    # Aislado también de notificaciones — sin esto, cualquier test que
+    # dispare una oportunidad "fuerte" escribiría al archivo real.
+    centro_notificaciones = NotificationCenter(
+        repository=JsonNotificationRepository(tmp_path / "notifications.json")
+    )
+    return AutomationEngine(
+        orchestrator=orquestador, obtener_fuente=obtener_fuente, notification_center=centro_notificaciones
+    )
 
 
 # --- run_once ---------------------------------------------------------------
@@ -107,3 +116,45 @@ def test_stop_sin_haber_iniciado_no_falla(tmp_path):
     motor = _motor_aislado(tmp_path)
     motor.stop()  # no debe lanzar nada
     assert motor.esta_activo() is False
+
+
+# --- Integración con NotificationCenter (Fase 1: Notificaciones) --------
+
+
+def test_run_once_evalua_notificacion_tras_ejecutar(tmp_path):
+    from mh_core.notifications.notification_rules import NotificationRules
+
+    repo_mem = JsonMemoryRepository(tmp_path / "history.json")
+    learning_engine = LearningEngine(memory_engine=MemoryEngine(repository=repo_mem))
+    orquestador = Orchestrator(learning_engine=learning_engine)
+
+    repo_notif = JsonNotificationRepository(tmp_path / "notifications.json")
+    # Umbral muy bajo a propósito, para no depender de que el video de
+    # prueba genere un score alto de verdad — lo que se prueba aquí es
+    # que AutomationEngine SÍ llama a evaluar_oportunidad, no la lógica
+    # de reglas en sí (eso ya lo cubre test_notifications.py).
+    centro = NotificationCenter(repository=repo_notif, rules=NotificationRules(umbral_probabilidad=0))
+
+    motor = AutomationEngine(orchestrator=orquestador, obtener_fuente=_fuente_falsa, notification_center=centro)
+    motor.run_once()
+
+    assert len(centro.listar()) == 1
+
+
+def test_fallo_al_notificar_no_tumba_la_ejecucion(tmp_path):
+    class _CentroQueFalla:
+        def evaluar_oportunidad(self, brain_report):
+            raise RuntimeError("falla simulada de notificaciones")
+
+    repo_mem = JsonMemoryRepository(tmp_path / "history.json")
+    learning_engine = LearningEngine(memory_engine=MemoryEngine(repository=repo_mem))
+    orquestador = Orchestrator(learning_engine=learning_engine)
+
+    motor = AutomationEngine(
+        orchestrator=orquestador, obtener_fuente=_fuente_falsa, notification_center=_CentroQueFalla()
+    )
+
+    # No debe lanzar — un fallo al notificar no debe tumbar el pipeline real.
+    resultado = motor.run_once()
+    assert "brain_report" in resultado
+    assert motor.ultimo_error is None

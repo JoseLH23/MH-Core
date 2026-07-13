@@ -1,0 +1,924 @@
+[
+  {
+    "id": "68b7ea58-f26f-4ff6-b32e-e48115c72417",
+    "status": "completed",
+    "current_stage": "completed",
+    "stage_results": {
+      "research": {
+        "agent": "research",
+        "goal": "Investigar tendencias reales y decidir la mejor oportunidad de contenido.",
+        "action_taken": "PRODUCIR",
+        "topic": "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+        "confidence": "MEDIUM",
+        "success_probability": 80.52,
+        "report": {
+          "brain": "MH Brain v1",
+          "mission": {
+            "name": "MH Core",
+            "objective": "Encontrar, evaluar y priorizar oportunidades digitales usando datos, patrones, memoria y predicción.",
+            "main_goal": "Reducir incertidumbre y ayudar a tomar mejores decisiones.",
+            "priorities": [
+              "Datos reales",
+              "Aprendizaje continuo",
+              "Explicabilidad",
+              "Automatización",
+              "Escalabilidad"
+            ]
+          },
+          "principles": [
+            "Nunca recomendar sin evidencia.",
+            "Toda decisión debe poder explicarse.",
+            "Aprender continuamente del historial.",
+            "Reducir incertidumbre antes de actuar.",
+            "Priorizar oportunidades con mayor potencial y menor riesgo.",
+            "Separar datos, análisis, decisión y ejecución."
+          ],
+          "executive_summary": {
+            "topic": "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+            "recommended_video": "Por qué la IA está empujando a muchas personas a emprender e invertir",
+            "recommended_channel": "DW Español",
+            "success_probability": 80.52,
+            "confidence": "MEDIUM",
+            "risk": "LOW",
+            "final_recommendation": "PRODUCIR"
+          },
+          "reasoning": [
+            "El MH Score es alto, lo que indica una oportunidad fuerte según el criterio interno de MH Core.",
+            "El patrón general todavía no muestra suficiente fuerza de mercado.",
+            "La predicción estima riesgo bajo para esta oportunidad.",
+            "El sistema ya tiene historial inicial, pero todavía está construyendo confianza."
+          ],
+          "recommended_actions": [
+            "Producir contenido sobre este tema lo antes posible."
+          ],
+          "knowledge": {
+            "topics": {
+              "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.": 1,
+              "tema de prueba": 52,
+              "ia": 12,
+              "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.": 3
+            },
+            "channels": {
+              "DrossRotzank": 1,
+              "Canal": 52,
+              "Canal Ejemplo": 12,
+              "DW Español": 3
+            }
+          },
+          "evidence": {
+            "decision": {
+              "decision": "PRODUCIR_INMEDIATAMENTE",
+              "reason": "Alta oportunidad: MH Core detectó fuerte crecimiento y buen potencial.",
+              "best_opportunity": {
+                "title": "Por qué la IA está empujando a muchas personas a emprender e invertir",
+                "channel": "DW Español",
+                "url": "https://www.youtube.com/watch?v=oA9cuw6n_WU",
+                "mh_score": 75.52,
+                "old_score": 274.5268133969805,
+                "priority": "HIGH"
+              }
+            },
+            "prediction": {
+              "success_probability": 80.52,
+              "confidence": "MEDIUM",
+              "risk": "LOW",
+              "recommendation": "PRODUCIR",
+              "signals": {
+                "mh_score": 75.52,
+                "opportunity_level": "LOW",
+                "average_history_score": 71.04,
+                "total_memories": 5
+              }
+            },
+            "patterns": {
+              "common_words": [
+                [
+                  "está",
+                  1
+                ],
+                [
+                  "empujando",
+                  1
+                ],
+                [
+                  "muchas",
+                  1
+                ],
+                [
+                  "personas",
+                  1
+                ],
+                [
+                  "emprender",
+                  1
+                ],
+                [
+                  "invertir",
+                  1
+                ],
+                [
+                  "emociones",
+                  1
+                ],
+                [
+                  "afectan",
+                  1
+                ],
+                [
+                  "cuerpo",
+                  1
+                ],
+                [
+                  "marian",
+                  1
+                ]
+              ],
+              "top_channels": [
+                [
+                  "DW Español",
+                  1
+                ],
+                [
+                  "AprendemosJuntos",
+                  1
+                ],
+                [
+                  "Mabell Rodríguez",
+                  1
+                ],
+                [
+                  "Xavier Mitjana",
+                  1
+                ],
+                [
+                  "DrossRotzank",
+                  1
+                ]
+              ],
+              "top_queries": [
+                [
+                  "inteligencia artificial",
+                  3
+                ],
+                [
+                  "neurociencia",
+                  1
+                ],
+                [
+                  "misterios del universo",
+                  1
+                ]
+              ],
+              "total_videos": 5
+            },
+            "learning_summary": {
+              "total_memories": 5,
+              "most_common_topics": [
+                [
+                  "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  2
+                ],
+                [
+                  "inteligencia artificial: inspirado en el patrón viral 'NOTICIAS IA: Nuevo modelo de ChatGPT, Sol'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  1
+                ],
+                [
+                  "inteligencia artificial: inspirado en el patrón viral 'La Nueva Inteligencia Artificial Para Ganar Dinero'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  1
+                ],
+                [
+                  "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  1
+                ]
+              ],
+              "most_common_decisions": [
+                [
+                  "PRODUCIR_INMEDIATAMENTE",
+                  3
+                ],
+                [
+                  "PRODUCIR_CON_MEJORAS",
+                  2
+                ]
+              ],
+              "most_common_channels": [
+                [
+                  "Inteligencia Artificial",
+                  2
+                ],
+                [
+                  "AprendemosJuntos",
+                  1
+                ],
+                [
+                  "DrossRotzank",
+                  1
+                ],
+                [
+                  "DW Español",
+                  1
+                ]
+              ],
+              "most_common_priorities": [
+                [
+                  "HIGH",
+                  3
+                ],
+                [
+                  "MEDIA",
+                  1
+                ],
+                [
+                  "MEDIUM",
+                  1
+                ]
+              ],
+              "most_common_opportunity_levels": [],
+              "average_mh_score": 71.04
+            }
+          }
+        }
+      },
+      "content_generation": {
+        "content": {
+          "id": "108e05a7-27ce-4e94-b460-5c9e806a302f",
+          "topic": "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+          "title": "La verdadera razón por la que todos están emprendiendo con IA",
+          "hook": "¿Por qué de repente todo el mundo quiere ser su propio jefe gracias a la IA? No es por moda, es por pura matemática.",
+          "script": "¿Por qué de repente todo el mundo quiere ser su propio jefe gracias a la IA? No es por moda, es por pura matemática.\nAntes, para lanzar cualquier idea de negocio necesitabas un programador, un diseñador y un redactor. Miles de dólares en presupuesto antes de saber si iba a funcionar.\nHoy, la Inteligencia Artificial es todo ese equipo dentro de tu teléfono y gratis.\nEl costo de crear un producto o analizar una inversión ha bajado a prácticamente cero.\nYa no arriesgas los ahorros de tu vida; ahora solo arriesgas un par de tardes en tu computadora.\nPor eso tantos están saltando al agua: porque hoy, el riesgo de empezar es mucho menor que el miedo a quedarse atrás.",
+          "description": "La IA ha democratizado el desarrollo de negocios. Descubre por qué la reducción drástica de costes y riesgos está motivando a miles de personas a emprender e invertir hoy mismo.",
+          "hashtags": [
+            "#inteligenciaartificial",
+            "#emprendimiento",
+            "#finanzas",
+            "#negociosonline"
+          ],
+          "cta": "¿Qué idea de negocio empezarías hoy mismo si la IA hiciera el trabajo difícil? Te leo en los comentarios.",
+          "duration_target": "short",
+          "style": "informativo",
+          "version": 1,
+          "parent_id": null,
+          "source_recommendation": "PRODUCIR",
+          "source_video_title": null,
+          "created_at": "2026-07-12T23:23:17",
+          "status": "aprobado"
+        },
+        "evaluation": {
+          "content_id": "108e05a7-27ce-4e94-b460-5c9e806a302f",
+          "claridad": 85.0,
+          "gancho": 100.0,
+          "retencion": 100.0,
+          "utilidad": 100.0,
+          "originalidad": 70.0,
+          "score_total": 91.0,
+          "aprobado": true,
+          "razones": [
+            "claridad: guion largo para 'short' (669 caracteres)"
+          ],
+          "evaluated_at": "2026-07-12T23:23:17"
+        },
+        "attempts": 1
+      },
+      "publishing": {
+        "content_id": "108e05a7-27ce-4e94-b460-5c9e806a302f",
+        "platform": "youtube",
+        "simulated": true,
+        "url": "https://simulado.mindhigh.local/youtube/5d08184d-edfc-4a40-b51d-3f8fd6fa0a0c",
+        "published_at": "2026-07-12T23:23:17"
+      },
+      "metrics": {
+        "content_id": "108e05a7-27ce-4e94-b460-5c9e806a302f",
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "impressions": 0,
+        "retention_percent": null,
+        "avg_view_duration_seconds": null,
+        "conversions": null,
+        "simulated": true,
+        "captured_at": "2026-07-12T23:23:17"
+      },
+      "notification": null
+    },
+    "errors": [],
+    "duration_target": "short",
+    "style": "informativo",
+    "started_at": "2026-07-12T23:22:41",
+    "completed_at": "2026-07-12T23:23:17"
+  },
+  {
+    "id": "26fe1db5-281a-4b6c-84dc-84988f3f6ba2",
+    "status": "completed",
+    "current_stage": "completed",
+    "stage_results": {
+      "research": {
+        "agent": "research",
+        "goal": "Investigar tendencias reales y decidir la mejor oportunidad de contenido.",
+        "action_taken": "PRODUCIR",
+        "topic": "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+        "confidence": "MEDIUM",
+        "success_probability": 80.52,
+        "report": {
+          "brain": "MH Brain v1",
+          "mission": {
+            "name": "MH Core",
+            "objective": "Encontrar, evaluar y priorizar oportunidades digitales usando datos, patrones, memoria y predicción.",
+            "main_goal": "Reducir incertidumbre y ayudar a tomar mejores decisiones.",
+            "priorities": [
+              "Datos reales",
+              "Aprendizaje continuo",
+              "Explicabilidad",
+              "Automatización",
+              "Escalabilidad"
+            ]
+          },
+          "principles": [
+            "Nunca recomendar sin evidencia.",
+            "Toda decisión debe poder explicarse.",
+            "Aprender continuamente del historial.",
+            "Reducir incertidumbre antes de actuar.",
+            "Priorizar oportunidades con mayor potencial y menor riesgo.",
+            "Separar datos, análisis, decisión y ejecución."
+          ],
+          "executive_summary": {
+            "topic": "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+            "recommended_video": "Por qué la IA está empujando a muchas personas a emprender e invertir",
+            "recommended_channel": "DW Español",
+            "success_probability": 80.52,
+            "confidence": "MEDIUM",
+            "risk": "LOW",
+            "final_recommendation": "PRODUCIR"
+          },
+          "reasoning": [
+            "El MH Score es alto, lo que indica una oportunidad fuerte según el criterio interno de MH Core.",
+            "El patrón general todavía no muestra suficiente fuerza de mercado.",
+            "La predicción estima riesgo bajo para esta oportunidad.",
+            "El sistema ya tiene historial inicial, pero todavía está construyendo confianza."
+          ],
+          "recommended_actions": [
+            "Producir contenido sobre este tema lo antes posible."
+          ],
+          "knowledge": {
+            "topics": {
+              "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.": 1,
+              "tema de prueba": 52,
+              "ia": 12,
+              "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.": 4
+            },
+            "channels": {
+              "DrossRotzank": 1,
+              "Canal": 52,
+              "Canal Ejemplo": 12,
+              "DW Español": 4
+            }
+          },
+          "evidence": {
+            "decision": {
+              "decision": "PRODUCIR_INMEDIATAMENTE",
+              "reason": "Alta oportunidad: MH Core detectó fuerte crecimiento y buen potencial.",
+              "best_opportunity": {
+                "title": "Por qué la IA está empujando a muchas personas a emprender e invertir",
+                "channel": "DW Español",
+                "url": "https://www.youtube.com/watch?v=oA9cuw6n_WU",
+                "mh_score": 75.52,
+                "old_score": 274.52043621038337,
+                "priority": "HIGH"
+              }
+            },
+            "prediction": {
+              "success_probability": 80.52,
+              "confidence": "MEDIUM",
+              "risk": "LOW",
+              "recommendation": "PRODUCIR",
+              "signals": {
+                "mh_score": 75.52,
+                "opportunity_level": "LOW",
+                "average_history_score": 71.04,
+                "total_memories": 5
+              }
+            },
+            "patterns": {
+              "common_words": [
+                [
+                  "está",
+                  1
+                ],
+                [
+                  "empujando",
+                  1
+                ],
+                [
+                  "muchas",
+                  1
+                ],
+                [
+                  "personas",
+                  1
+                ],
+                [
+                  "emprender",
+                  1
+                ],
+                [
+                  "invertir",
+                  1
+                ],
+                [
+                  "emociones",
+                  1
+                ],
+                [
+                  "afectan",
+                  1
+                ],
+                [
+                  "cuerpo",
+                  1
+                ],
+                [
+                  "marian",
+                  1
+                ]
+              ],
+              "top_channels": [
+                [
+                  "DW Español",
+                  1
+                ],
+                [
+                  "AprendemosJuntos",
+                  1
+                ],
+                [
+                  "Xavier Mitjana",
+                  1
+                ],
+                [
+                  "DrossRotzank",
+                  1
+                ],
+                [
+                  "DR LA ROSA",
+                  1
+                ]
+              ],
+              "top_queries": [
+                [
+                  "inteligencia artificial",
+                  2
+                ],
+                [
+                  "neurociencia",
+                  2
+                ],
+                [
+                  "misterios del universo",
+                  1
+                ]
+              ],
+              "total_videos": 5
+            },
+            "learning_summary": {
+              "total_memories": 5,
+              "most_common_topics": [
+                [
+                  "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  2
+                ],
+                [
+                  "inteligencia artificial: inspirado en el patrón viral 'NOTICIAS IA: Nuevo modelo de ChatGPT, Sol'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  1
+                ],
+                [
+                  "inteligencia artificial: inspirado en el patrón viral 'La Nueva Inteligencia Artificial Para Ganar Dinero'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  1
+                ],
+                [
+                  "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  1
+                ]
+              ],
+              "most_common_decisions": [
+                [
+                  "PRODUCIR_INMEDIATAMENTE",
+                  3
+                ],
+                [
+                  "PRODUCIR_CON_MEJORAS",
+                  2
+                ]
+              ],
+              "most_common_channels": [
+                [
+                  "Inteligencia Artificial",
+                  2
+                ],
+                [
+                  "AprendemosJuntos",
+                  1
+                ],
+                [
+                  "DrossRotzank",
+                  1
+                ],
+                [
+                  "DW Español",
+                  1
+                ]
+              ],
+              "most_common_priorities": [
+                [
+                  "HIGH",
+                  3
+                ],
+                [
+                  "MEDIA",
+                  1
+                ],
+                [
+                  "MEDIUM",
+                  1
+                ]
+              ],
+              "most_common_opportunity_levels": [],
+              "average_mh_score": 71.04
+            }
+          }
+        }
+      },
+      "content_generation": {
+        "content": {
+          "id": "659e1434-032e-4a7f-9715-0d496d9ba495",
+          "topic": "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+          "title": "La verdad de emprender con IA",
+          "hook": "¿Sabías que la Inteligencia Artificial no viene a quitarte el trabajo, sino a hacerte jefe?",
+          "script": "(0:00 - 0:03) ¿Sabías que la Inteligencia Artificial no viene a quitarte el trabajo, sino a hacerte jefe?\n\n(0:03 - 0:15) Antes, para lanzar un negocio o analizar inversiones, necesitabas miles de dólares y un equipo entero. Hoy, el costo de fracasar es prácticamente cero.\n\n(0:15 - 0:30) Con herramientas de IA, puedes validar una idea, crear un producto mínimo viable y analizar el mercado financiero en una sola tarde, gratis.\n\n(0:30 - 0:45) La gente no está emprendiendo porque sea una moda, sino porque por primera vez en la historia, el riesgo de empezar es casi inexistente.\n\n(0:45 - 0:50) El verdadero peligro hoy ya no es perder dinero... es quedarte quieto mientras otros avanzan con un par de clics.",
+          "description": "La Inteligencia Artificial ha cambiado las reglas del juego reduciendo el costo de emprender a cero. Descubre por qué esta es la mejor época de la historia para lanzar tu propia idea sin riesgo financiero.",
+          "hashtags": [
+            "#EmprenderConIA",
+            "#InteligenciaArtificial",
+            "#NegociosDigitales",
+            "#MentalidadEmprendedora"
+          ],
+          "cta": "Comenta qué negocio te gustaría crear y te digo qué herramientas de IA necesitas.",
+          "duration_target": "short",
+          "style": "informativo",
+          "version": 1,
+          "parent_id": null,
+          "source_recommendation": "PRODUCIR",
+          "source_video_title": null,
+          "created_at": "2026-07-12T23:23:51",
+          "status": "aprobado"
+        },
+        "evaluation": {
+          "content_id": "659e1434-032e-4a7f-9715-0d496d9ba495",
+          "claridad": 85.0,
+          "gancho": 100.0,
+          "retencion": 90.0,
+          "utilidad": 100.0,
+          "originalidad": 50.0,
+          "score_total": 85.0,
+          "aprobado": true,
+          "razones": [
+            "claridad: guion largo para 'short' (709 caracteres)"
+          ],
+          "evaluated_at": "2026-07-12T23:23:51"
+        },
+        "attempts": 1
+      },
+      "publishing": {
+        "content_id": "659e1434-032e-4a7f-9715-0d496d9ba495",
+        "platform": "youtube",
+        "simulated": true,
+        "url": "https://simulado.mindhigh.local/youtube/ca3ff421-04ad-4daf-91a5-d123de3b57dd",
+        "published_at": "2026-07-12T23:23:51"
+      },
+      "metrics": {
+        "content_id": "659e1434-032e-4a7f-9715-0d496d9ba495",
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "impressions": 0,
+        "retention_percent": null,
+        "avg_view_duration_seconds": null,
+        "conversions": null,
+        "simulated": true,
+        "captured_at": "2026-07-12T23:23:51"
+      },
+      "notification": null
+    },
+    "errors": [],
+    "duration_target": "short",
+    "style": "informativo",
+    "started_at": "2026-07-12T23:23:31",
+    "completed_at": "2026-07-12T23:23:51"
+  },
+  {
+    "id": "88b61dd4-5a3e-4c82-82dd-ffb0c34ffa64",
+    "status": "completed",
+    "current_stage": "completed",
+    "stage_results": {
+      "research": {
+        "agent": "research",
+        "goal": "Investigar tendencias reales y decidir la mejor oportunidad de contenido.",
+        "action_taken": "PRODUCIR_CON_CUIDADO",
+        "topic": "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+        "confidence": "MEDIUM",
+        "success_probability": 70.16,
+        "report": {
+          "brain": "MH Brain v1",
+          "mission": {
+            "name": "MH Core",
+            "objective": "Encontrar, evaluar y priorizar oportunidades digitales usando datos, patrones, memoria y predicción.",
+            "main_goal": "Reducir incertidumbre y ayudar a tomar mejores decisiones.",
+            "priorities": [
+              "Datos reales",
+              "Aprendizaje continuo",
+              "Explicabilidad",
+              "Automatización",
+              "Escalabilidad"
+            ]
+          },
+          "principles": [
+            "Nunca recomendar sin evidencia.",
+            "Toda decisión debe poder explicarse.",
+            "Aprender continuamente del historial.",
+            "Reducir incertidumbre antes de actuar.",
+            "Priorizar oportunidades con mayor potencial y menor riesgo.",
+            "Separar datos, análisis, decisión y ejecución."
+          ],
+          "executive_summary": {
+            "topic": "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+            "recommended_video": "7 Misterios Perturbadores Del Cosmos",
+            "recommended_channel": "DrossRotzank",
+            "success_probability": 70.16,
+            "confidence": "MEDIUM",
+            "risk": "MEDIUM",
+            "final_recommendation": "PRODUCIR_CON_CUIDADO"
+          },
+          "reasoning": [
+            "El MH Score es medio, por lo que la oportunidad existe pero requiere mejor enfoque.",
+            "El patrón general todavía no muestra suficiente fuerza de mercado.",
+            "La predicción estima riesgo medio; conviene producir con cuidado.",
+            "El sistema ya tiene historial inicial, pero todavía está construyendo confianza."
+          ],
+          "recommended_actions": [
+            "Producir solo si se mejora el ángulo, el hook y la diferenciación.",
+            "Validar el tema con una segunda investigación antes de invertir demasiado tiempo."
+          ],
+          "knowledge": {
+            "topics": {
+              "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.": 2,
+              "tema de prueba": 52,
+              "ia": 12,
+              "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.": 4
+            },
+            "channels": {
+              "DrossRotzank": 2,
+              "Canal": 52,
+              "Canal Ejemplo": 12,
+              "DW Español": 4
+            }
+          },
+          "evidence": {
+            "decision": {
+              "decision": "PRODUCIR_CON_MEJORAS",
+              "reason": "Oportunidad media: se puede producir, pero necesita mejor ángulo, hook y diferenciación.",
+              "best_opportunity": {
+                "title": "7 Misterios Perturbadores Del Cosmos",
+                "channel": "DrossRotzank",
+                "url": "https://www.youtube.com/watch?v=LANJywmkHK4",
+                "mh_score": 65.16,
+                "old_score": 255.25019665768673,
+                "priority": "MEDIUM"
+              }
+            },
+            "prediction": {
+              "success_probability": 70.16,
+              "confidence": "MEDIUM",
+              "risk": "MEDIUM",
+              "recommendation": "PRODUCIR_CON_CUIDADO",
+              "signals": {
+                "mh_score": 65.16,
+                "opportunity_level": "LOW",
+                "average_history_score": 71.04,
+                "total_memories": 5
+              }
+            },
+            "patterns": {
+              "common_words": [
+                [
+                  "mejor",
+                  2
+                ],
+                [
+                  "emociones",
+                  1
+                ],
+                [
+                  "afectan",
+                  1
+                ],
+                [
+                  "cuerpo",
+                  1
+                ],
+                [
+                  "marian",
+                  1
+                ],
+                [
+                  "rojas",
+                  1
+                ],
+                [
+                  "estapé",
+                  1
+                ],
+                [
+                  "psiquiatra",
+                  1
+                ],
+                [
+                  "escritora",
+                  1
+                ],
+                [
+                  "chatgpt",
+                  1
+                ]
+              ],
+              "top_channels": [
+                [
+                  "AprendemosJuntos",
+                  2
+                ],
+                [
+                  "Xavier Mitjana",
+                  1
+                ],
+                [
+                  "DrossRotzank",
+                  1
+                ],
+                [
+                  "XpressTV",
+                  1
+                ]
+              ],
+              "top_queries": [
+                [
+                  "neurociencia",
+                  2
+                ],
+                [
+                  "inteligencia artificial",
+                  1
+                ],
+                [
+                  "misterios del universo",
+                  1
+                ],
+                [
+                  "datos curiosos ciencia",
+                  1
+                ]
+              ],
+              "total_videos": 5
+            },
+            "learning_summary": {
+              "total_memories": 5,
+              "most_common_topics": [
+                [
+                  "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  2
+                ],
+                [
+                  "inteligencia artificial: inspirado en el patrón viral 'NOTICIAS IA: Nuevo modelo de ChatGPT, Sol'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  1
+                ],
+                [
+                  "inteligencia artificial: inspirado en el patrón viral 'La Nueva Inteligencia Artificial Para Ganar Dinero'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  1
+                ],
+                [
+                  "inteligencia artificial: inspirado en el patrón viral 'Por qué la IA está empujando a muchas personas a emprender e invertir'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+                  1
+                ]
+              ],
+              "most_common_decisions": [
+                [
+                  "PRODUCIR_INMEDIATAMENTE",
+                  3
+                ],
+                [
+                  "PRODUCIR_CON_MEJORAS",
+                  2
+                ]
+              ],
+              "most_common_channels": [
+                [
+                  "Inteligencia Artificial",
+                  2
+                ],
+                [
+                  "AprendemosJuntos",
+                  1
+                ],
+                [
+                  "DrossRotzank",
+                  1
+                ],
+                [
+                  "DW Español",
+                  1
+                ]
+              ],
+              "most_common_priorities": [
+                [
+                  "HIGH",
+                  3
+                ],
+                [
+                  "MEDIA",
+                  1
+                ],
+                [
+                  "MEDIUM",
+                  1
+                ]
+              ],
+              "most_common_opportunity_levels": [],
+              "average_mh_score": 71.04
+            }
+          }
+        }
+      },
+      "content_generation": {
+        "content": {
+          "id": "e9421370-d158-4933-b9c6-54b3059fc057",
+          "topic": "neurociencia: inspirado en el patrón viral 'Por qué tus emociones afectan a tu cuerpo | Marian Rojas-Estapé, psiquiatra y escritora'. Crea un video original, no copies el contenido, solo usa el tema general y el tipo de curiosidad.",
+          "title": "El correo de tu jefe y el león: por qué te duele el cuerpo",
+          "hook": "Tu cerebro no distingue entre un león persiguiéndote y un correo estresante de tu jefe.",
+          "script": "Tu cerebro no distingue entre un león persiguiéndote y un correo estresante de tu jefe. \nCuando te estresas por una notificación, tu amígdala activa la alarma de supervivencia. \n¿El resultado? El cuerpo desvía la sangre de tu sistema digestivo hacia tus músculos para que puedas huir. Por eso sientes ese maldito 'nudo' en el estómago. \nAdemás, el cortisol y la adrenalina tensan tus hombros y cuello para un combate físico... que nunca va a ocurrir. \nNo te lo estás inventando: tu dolor de espalda es una respuesta física real a una alerta mental. \n¿Cómo apagarlo? Haz una exhalación larga, el doble de tiempo que la inhalación. Eso le avisa a tu sistema nervioso que ya estás a salvo.",
+          "description": "Descubre la ciencia real detrás de por qué el estrés emocional se transforma en dolor físico en tu espalda y estómago. Aprende a desactivar la alerta en segundos.",
+          "hashtags": [
+            "#neurociencia",
+            "#estres",
+            "#saludmental",
+            "#cuerpoymente"
+          ],
+          "cta": "Prueba la exhalación larga ahora mismo y dime en los comentarios si sentiste el alivio.",
+          "duration_target": "short",
+          "style": "informativo",
+          "version": 1,
+          "parent_id": null,
+          "source_recommendation": "PRODUCIR_CON_CUIDADO",
+          "source_video_title": null,
+          "created_at": "2026-07-12T23:24:36",
+          "status": "aprobado"
+        },
+        "evaluation": {
+          "content_id": "e9421370-d158-4933-b9c6-54b3059fc057",
+          "claridad": 85.0,
+          "gancho": 75.0,
+          "retencion": 100.0,
+          "utilidad": 100.0,
+          "originalidad": 100.0,
+          "score_total": 92.0,
+          "aprobado": true,
+          "razones": [
+            "claridad: guion largo para 'short' (686 caracteres)"
+          ],
+          "evaluated_at": "2026-07-12T23:24:36"
+        },
+        "attempts": 1
+      },
+      "publishing": {
+        "content_id": "e9421370-d158-4933-b9c6-54b3059fc057",
+        "platform": "youtube",
+        "simulated": true,
+        "url": "https://simulado.mindhigh.local/youtube/af38b54e-111b-4f7d-9210-d220663da80e",
+        "published_at": "2026-07-12T23:24:36"
+      },
+      "metrics": {
+        "content_id": "e9421370-d158-4933-b9c6-54b3059fc057",
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "impressions": 0,
+        "retention_percent": null,
+        "avg_view_duration_seconds": null,
+        "conversions": null,
+        "simulated": true,
+        "captured_at": "2026-07-12T23:24:36"
+      },
+      "notification": null
+    },
+    "errors": [],
+    "duration_target": "short",
+    "style": "informativo",
+    "started_at": "2026-07-12T23:24:05",
+    "completed_at": "2026-07-12T23:24:37"
+  }
+]

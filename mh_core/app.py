@@ -14,6 +14,8 @@ from mh_core.routes.core_routes import router as core_router
 from mh_core.routes.automation_routes import router as automation_router
 from mh_core.routes.agent_routes import router as agent_router
 from apps.mindhigh.routes.mindhigh_routes import router as mindhigh_router
+from apps.mindhigh.routes.orchestrator_routes import router as mindhigh_orchestrator_router
+from mh_core.routes.notification_routes import router as notification_router
 
 
 app = FastAPI(
@@ -28,6 +30,8 @@ app.include_router(core_router)
 app.include_router(automation_router)
 app.include_router(agent_router)
 app.include_router(mindhigh_router)
+app.include_router(mindhigh_orchestrator_router)
+app.include_router(notification_router)
 
 @app.get("/")
 def home():

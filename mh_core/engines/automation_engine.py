@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Callable, Optional
 
 from mh_core.core.orchestrator import Orchestrator
+from mh_core.notifications.notification_center import NotificationCenter
 from mh_core.services.research_service import ResearchService
 from mh_core.utils.logger import logger
 
@@ -26,11 +27,13 @@ class AutomationEngine:
         self,
         orchestrator: Optional[Orchestrator] = None,
         obtener_fuente: Optional[Callable[[], dict]] = None,
+        notification_center: Optional[NotificationCenter] = None,
     ):
-        # Ambos inyectables a propósito — los tests nunca llaman a la
-        # API real de YouTube ni tocan el archivo real de memorias.
+        # Todos inyectables a propósito — los tests nunca llaman a la
+        # API real de YouTube ni tocan archivos reales.
         self.orchestrator = orchestrator or Orchestrator()
         self._obtener_fuente = obtener_fuente or ResearchService._run_source
+        self.notification_center = notification_center or NotificationCenter()
 
         self._hilo: Optional[threading.Thread] = None
         self._detener = threading.Event()
@@ -55,6 +58,16 @@ class AutomationEngine:
             self.ultimo_resultado = resultado
             self.ultimo_error = None
             self.total_ejecuciones += 1
+
+            # Evaluación de notificación — nunca debe tumbar la
+            # ejecución del pipeline si algo sale mal aquí; el
+            # resultado real del pipeline ya está a salvo arriba.
+            brain_report = resultado.get("brain_report")
+            if brain_report:
+                try:
+                    self.notification_center.evaluar_oportunidad(brain_report)
+                except Exception as e:
+                    logger.warning(f"AutomationEngine: no se pudo evaluar notificación ({e}).")
 
             logger.info(f"AutomationEngine: ejecución #{self.total_ejecuciones} completada (tema='{topic}').")
             return resultado

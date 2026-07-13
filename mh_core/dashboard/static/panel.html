@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>MindHigh · Panel</title>
+<style>
+  :root { --ok:#1a7f37; --warn:#9a6700; --bad:#cf222e; --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#e6edf3; --muted:#8b949e; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 10px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .badge { display:inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .ok { background: rgba(26,127,55,.15); color: var(--ok); }
+  .warn { background: rgba(154,103,0,.15); color: var(--warn); }
+  .bad { background: rgba(207,34,46,.15); color: var(--bad); }
+  .row { display:flex; justify-content: space-between; align-items:center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .row:last-child { border-bottom: none; }
+  button { background:#238636; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px; margin-right:8px; }
+  button:hover { background:#2ea043; }
+  button:disabled { background:#484f58; cursor: not-allowed; }
+  select { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 6px; border-radius: 6px; margin-right: 8px; }
+  .list-item { border-bottom: 1px solid var(--border); padding: 10px 0; font-size: 13px; }
+  .list-item:last-child { border-bottom: none; }
+  .muted { color: var(--muted); }
+  .err { color: var(--bad); font-size: 12px; margin-top: 6px; }
+  pre { white-space: pre-wrap; font-size: 11px; background: #010409; padding: 8px; border-radius: 6px; max-height: 160px; overflow: auto; }
+  .stage { display:inline-block; padding:2px 6px; border-radius:4px; background:#1f6feb22; color:#58a6ff; font-size:11px; margin-right:4px;}
+</style>
+</head>
+<body>
+
+<h1>🧠 MindHigh — Panel</h1>
+<p class="sub">Consume la API real de MH-Core en vivo. Nada de esta pantalla es un dato de demostración.</p>
+
+<div class="grid">
+  <div class="card">
+    <h2>Estado general</h2>
+    <div id="system-status">Cargando...</div>
+  </div>
+
+  <div class="card">
+    <h2>Proveedores de generación</h2>
+    <div id="providers-status">Cargando...</div>
+  </div>
+
+  <div class="card">
+    <h2>Automation Engine</h2>
+    <div id="automation-status">Cargando...</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+  <h2>Ejecutar el flujo manualmente</h2>
+  <select id="duration-target">
+    <option value="short">Short (&lt;60s)</option>
+    <option value="medio">Medio (3-5 min)</option>
+    <option value="largo">Largo (&gt;5 min)</option>
+  </select>
+  <select id="style">
+    <option value="informativo">Informativo</option>
+    <option value="humoristico">Humorístico</option>
+    <option value="cercano">Cercano</option>
+    <option value="aventurero">Aventurero</option>
+  </select>
+  <button id="run-btn" onclick="ejecutarRun()">Ejecutar ahora</button>
+  <span id="run-status" class="muted"></span>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Historial de ejecuciones</h2>
+    <div id="runs-list">Cargando...</div>
+  </div>
+
+  <div class="card">
+    <h2>Notificaciones</h2>
+    <div id="notifications-list">Cargando...</div>
+  </div>
+
+  <div class="card">
+    <h2>Rendimiento (real vs. simulado)</h2>
+    <div id="performance-summary">Cargando...</div>
+  </div>
+</div>
+
+<script>
+const API = ""; // mismo origen — el panel se sirve desde la misma app FastAPI
+
+async function obtenerJSON(ruta) {
+  try {
+    const resp = await fetch(API + ruta);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return await resp.json();
+  } catch (e) {
+    return { __error: e.message };
+  }
+}
+
+function badge(texto, clase) {
+  return `<span class="badge ${clase}">${texto}</span>`;
+}
+
+function claseEstado(v) {
+  const s = String(v).toLowerCase();
+  if (["ok", "ready", "online", "configured", "completed", "success", "en_linea"].includes(s)) return "ok";
+  if (["pending", "warning", "degradado"].includes(s)) return "warn";
+  return "bad";
+}
+
+async function cargarSistema() {
+  const data = await obtenerJSON("/dashboard/system");
+  if (data.__error) { document.getElementById("system-status").innerHTML = `<div class="err">${data.__error}</div>`; return; }
+  let html = `<div class="row"><span>Sistema</span>${badge(data.status, claseEstado(data.status))}</div>`;
+  for (const [k, v] of Object.entries(data.engines || {})) {
+    html += `<div class="row"><span>${k}</span>${badge(v, claseEstado(v))}</div>`;
+  }
+  document.getElementById("system-status").innerHTML = html;
+}
+
+async function cargarProveedores() {
+  const data = await obtenerJSON("/mindhigh/providers/status");
+  if (data.__error) { document.getElementById("providers-status").innerHTML = `<div class="err">${data.__error}</div>`; return; }
+  let html = "";
+  for (const [k, v] of Object.entries(data)) {
+    html += `<div class="row"><span>${k}</span>${badge(v, claseEstado(v))}</div>`;
+  }
+  document.getElementById("providers-status").innerHTML = html;
+}
+
+async function cargarAutomation() {
+  const data = await obtenerJSON("/automation/status");
+  if (data.__error) { document.getElementById("automation-status").innerHTML = `<div class="err">${data.__error}</div>`; return; }
+  document.getElementById("automation-status").innerHTML = `
+    <div class="row"><span>Activo</span>${badge(data.activo ? "sí" : "no", data.activo ? "ok" : "warn")}</div>
+    <div class="row"><span>Ejecuciones totales</span><span>${data.total_ejecuciones}</span></div>
+    <div class="row"><span>Última ejecución</span><span>${data.ultima_ejecucion || "—"}</span></div>
+    <div class="row"><span>Último error</span><span class="${data.ultimo_error ? 'err' : 'muted'}">${data.ultimo_error || "ninguno"}</span></div>
+  `;
+}
+
+async function cargarRuns() {
+  const data = await obtenerJSON("/mindhigh/runs?limit=8");
+  if (data.__error) { document.getElementById("runs-list").innerHTML = `<div class="err">${data.__error}</div>`; return; }
+  const runs = data.runs || [];
+  if (runs.length === 0) { document.getElementById("runs-list").innerHTML = `<p class="muted">Sin ejecuciones todavía.</p>`; return; }
+
+  let html = "";
+  for (const r of runs) {
+    const cg = r.stage_results?.content_generation;
+    const evalua = cg?.evaluation;
+    html += `<div class="list-item">
+      <div>${badge(r.status, claseEstado(r.status))} <span class="stage">${r.current_stage}</span></div>
+      <div class="muted">${r.id.slice(0,8)}… · ${r.started_at}</div>
+      ${cg ? `<div>${cg.content.title} — score ${evalua.score_total} (${evalua.aprobado ? "aprobado" : "no aprobado"}), proveedor: ${cg.content.status}</div>` : ""}
+      ${r.errors.length ? `<div class="err">${r.errors.map(e => `${e.stage}: ${e.error}`).join(" · ")}</div>` : ""}
+    </div>`;
+  }
+  document.getElementById("runs-list").innerHTML = html;
+}
+
+async function cargarNotificaciones() {
+  const data = await obtenerJSON("/notifications");
+  if (data.__error) { document.getElementById("notifications-list").innerHTML = `<div class="err">${data.__error}</div>`; return; }
+  const notifs = data.notifications || [];
+  if (notifs.length === 0) { document.getElementById("notifications-list").innerHTML = `<p class="muted">Sin notificaciones todavía.</p>`; return; }
+
+  let html = "";
+  for (const n of notifs.slice(0, 8)) {
+    html += `<div class="list-item">
+      <div>${badge(n.read ? "leída" : "no leída", n.read ? "ok" : "warn")} ${n.title}</div>
+      <div class="muted">${n.message}</div>
+    </div>`;
+  }
+  document.getElementById("notifications-list").innerHTML = html;
+}
+
+async function cargarRendimiento() {
+  const data = await obtenerJSON("/mindhigh/performance/summary");
+  if (data.__error) { document.getElementById("performance-summary").innerHTML = `<div class="err">${data.__error}</div>`; return; }
+  document.getElementById("performance-summary").innerHTML = `
+    <div class="row"><span>Real — total</span><span>${data.real.total}</span></div>
+    <div class="row"><span>Real — CTR promedio</span><span>${data.real.avg_ctr_percent ?? "—"}</span></div>
+    <div class="row"><span>Simulado — total</span><span>${data.simulated.total}</span></div>
+    <p class="muted" style="font-size:11px;">${data.nota}</p>
+  `;
+}
+
+async function ejecutarRun() {
+  const btn = document.getElementById("run-btn");
+  const status = document.getElementById("run-status");
+  const duration = document.getElementById("duration-target").value;
+  const style = document.getElementById("style").value;
+
+  btn.disabled = true;
+  status.textContent = "Ejecutando el flujo completo (puede tardar unos segundos)...";
+
+  try {
+    const resp = await fetch(`/mindhigh/runs?duration_target=${duration}&style=${style}`, { method: "POST" });
+    const data = await resp.json();
+    status.textContent = resp.ok ? `Run ${data.id?.slice(0,8)} — ${data.status}` : `Error: ${data.detail}`;
+  } catch (e) {
+    status.textContent = `Error: ${e.message}`;
+  }
+
+  btn.disabled = false;
+  await cargarTodo();
+}
+
+async function cargarTodo() {
+  await Promise.all([
+    cargarSistema(), cargarProveedores(), cargarAutomation(),
+    cargarRuns(), cargarNotificaciones(), cargarRendimiento(),
+  ]);
+}
+
+cargarTodo();
+setInterval(cargarTodo, 15000); // refresco automático real, cada 15s
+</script>
+</body>
+</html>

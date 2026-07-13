@@ -1,0 +1,54 @@
+[
+    {
+        "content_id": "ba8ec2bc-0d65-4ef6-aecc-d4910cf3823c",
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "simulated": true,
+        "captured_at": "2026-07-12T20:01:38"
+    },
+    {
+        "content_id": "d2b57734-f210-4704-acfc-9f18157ff8fc",
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "simulated": true,
+        "captured_at": "2026-07-12T20:19:35"
+    },
+    {
+        "content_id": "108e05a7-27ce-4e94-b460-5c9e806a302f",
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "impressions": 0,
+        "retention_percent": null,
+        "avg_view_duration_seconds": null,
+        "conversions": null,
+        "simulated": true,
+        "captured_at": "2026-07-12T23:23:17"
+    },
+    {
+        "content_id": "659e1434-032e-4a7f-9715-0d496d9ba495",
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "impressions": 0,
+        "retention_percent": null,
+        "avg_view_duration_seconds": null,
+        "conversions": null,
+        "simulated": true,
+        "captured_at": "2026-07-12T23:23:51"
+    },
+    {
+        "content_id": "e9421370-d158-4933-b9c6-54b3059fc057",
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "impressions": 0,
+        "retention_percent": null,
+        "avg_view_duration_seconds": null,
+        "conversions": null,
+        "simulated": true,
+        "captured_at": "2026-07-12T23:24:36"
+    }
+]
