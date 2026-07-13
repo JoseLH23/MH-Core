@@ -21,7 +21,7 @@ from apps.mindhigh.models.content_piece import ContentPiece
 from apps.mindhigh.services.content_generator import ContentGenerator
 from mh_core.utils.logger import logger
 
-MODELO_POR_DEFECTO = "gemini-2.5-flash"  # nivel gratis, buen balance velocidad/calidad (jul 2026)
+MODELO_POR_DEFECTO = "gemini-3.5-flash"  # nivel gratis, buen balance velocidad/calidad (jul 2026)
 
 
 class GeminiContentGenerator:

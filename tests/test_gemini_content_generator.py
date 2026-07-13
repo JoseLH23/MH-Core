@@ -60,7 +60,19 @@ def test_con_respuesta_bien_formateada_usa_titulo_y_guion_de_gemini():
     assert contenido.title == "Lo que la IA está cambiando en medicina"
     assert "Gancho inicial" in contenido.script
     assert contenido.topic == "inteligencia artificial en medicina"
-    assert cliente_falso.models.llamadas[0][0] == "gemini-2.5-flash"
+    assert cliente_falso.models.llamadas[0][0] == "gemini-3.5-flash"
+
+
+def test_modelo_por_defecto_es_gemini_3_5_flash():
+    """Confirma el valor por defecto real usado cuando no se pasa `model`
+    explícito — evita que un cambio futuro lo modifique sin darse cuenta."""
+    cliente_falso = _ClienteGeminiFalso("TITULO: X\nGUION:\nY")
+    generador = GeminiContentGenerator(api_key="clave", cliente=cliente_falso)
+
+    assert generador.model == "gemini-3.5-flash"
+
+    generador.generar(BRAIN_REPORT_EJEMPLO)
+    assert cliente_falso.models.llamadas[0][0] == "gemini-3.5-flash"
 
 
 def test_respeta_modelo_configurado_por_variable():
