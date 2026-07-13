@@ -1,3 +1,12 @@
+from dotenv import load_dotenv
+
+# Debe ir ANTES de cualquier import de mh_core/apps — varios módulos
+# leen variables de entorno (YOUTUBE_API_KEY, GEMINI_API_KEY, etc.) en
+# el momento en que se importan, no de forma perezosa. Antes de esto,
+# el proyecto no cargaba .env en ningún lado — solo funcionaba si la
+# variable ya estaba exportada en el sistema/PowerShell.
+load_dotenv()
+
 from fastapi import FastAPI
 from mh_core.dashboard.dashboard_routes import router as dashboard_router
 from mh_core.routes.research_routes import router as research_router

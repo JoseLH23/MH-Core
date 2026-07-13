@@ -21,7 +21,7 @@ from typing import Optional
 from apps.mindhigh.engines.metrics_engine import MetricsEngine
 from apps.mindhigh.publishing.publisher_adapter import PublisherAdapter
 from apps.mindhigh.publishing.simulated_publisher import SimulatedPublisher
-from apps.mindhigh.services.content_generator import ContentGenerator
+from apps.mindhigh.services.gemini_content_generator import GeminiContentGenerator
 from mh_core.agents.research_agent import ResearchAgent
 from mh_core.utils.logger import logger
 
@@ -30,12 +30,15 @@ class MindHighPipeline:
     def __init__(
         self,
         research_agent: Optional[ResearchAgent] = None,
-        content_generator: Optional[ContentGenerator] = None,
+        content_generator=None,
         publisher: Optional[PublisherAdapter] = None,
         metrics_engine: Optional[MetricsEngine] = None,
     ):
         self.research_agent = research_agent or ResearchAgent()
-        self.content_generator = content_generator or ContentGenerator()
+        # GeminiContentGenerator ya trae su propio fallback honesto a
+        # plantillas si no hay GEMINI_API_KEY o la llamada falla — no
+        # hace falta duplicar esa lógica aquí.
+        self.content_generator = content_generator or GeminiContentGenerator()
         self.publisher = publisher or SimulatedPublisher()
         self.metrics_engine = metrics_engine or MetricsEngine()
 
