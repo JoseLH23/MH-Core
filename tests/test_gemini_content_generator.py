@@ -1,3 +1,5 @@
+import json
+
 from apps.mindhigh.services.gemini_content_generator import GeminiContentGenerator
 from apps.mindhigh.models.content_piece import ContentPiece
 
@@ -6,6 +8,18 @@ BRAIN_REPORT_EJEMPLO = {
     "reasoning": ["El MH Score es alto."],
     "recommended_actions": ["Producir cuanto antes."],
 }
+
+JSON_BIEN_FORMADO = json.dumps(
+    {
+        "titulo": "Lo que la IA está cambiando en medicina",
+        "gancho": "¿Sabías que esto ya está pasando en hospitales reales?",
+        "guion": "Gancho inicial...\nDesarrollo...\nCierre...",
+        "descripcion": "Un video sobre IA en medicina.",
+        "hashtags": ["#IA", "#Medicina", "#Tecnologia"],
+        "cta": "Sígueme para más contenido como este.",
+    },
+    ensure_ascii=False,
+)
 
 
 class _RespuestaFalsa:
@@ -38,7 +52,10 @@ class _ClienteGeminiQueFalla:
 # --- Sin API key -------------------------------------------------------
 
 
-def test_sin_api_key_usa_fallback_de_plantillas():
+def test_sin_api_key_usa_fallback_de_plantillas(monkeypatch):
+    # Mismo aislamiento que en Groq — no depender de si GEMINI_API_KEY
+    # ya existe como variable de entorno real en la máquina.
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     generador = GeminiContentGenerator(api_key=None)
     contenido = generador.generar(BRAIN_REPORT_EJEMPLO)
 
@@ -46,27 +63,43 @@ def test_sin_api_key_usa_fallback_de_plantillas():
     assert "generado por plantilla" in contenido.script  # marca real del fallback
 
 
-# --- Éxito real (formato esperado) ---------------------------------------
+# --- Éxito real (JSON estructurado, formato pedido de verdad) --------------
 
 
-def test_con_respuesta_bien_formateada_usa_titulo_y_guion_de_gemini():
-    cliente_falso = _ClienteGeminiFalso(
-        "TITULO: Lo que la IA está cambiando en medicina\nGUION:\nGancho inicial...\nCierre..."
-    )
+def test_con_respuesta_json_usa_todos_los_campos_estructurados():
+    cliente_falso = _ClienteGeminiFalso(JSON_BIEN_FORMADO)
     generador = GeminiContentGenerator(api_key="clave-falsa-de-prueba", cliente=cliente_falso)
 
     contenido = generador.generar(BRAIN_REPORT_EJEMPLO)
 
     assert contenido.title == "Lo que la IA está cambiando en medicina"
-    assert "Gancho inicial" in contenido.script
+    assert "Sabías que esto ya está pasando" in contenido.hook
+    assert "Desarrollo" in contenido.script
+    assert contenido.description == "Un video sobre IA en medicina."
+    assert contenido.hashtags == ["#IA", "#Medicina", "#Tecnologia"]
+    assert contenido.cta == "Sígueme para más contenido como este."
     assert contenido.topic == "inteligencia artificial en medicina"
     assert cliente_falso.models.llamadas[0][0] == "gemini-3.5-flash"
+
+
+def test_pasa_duration_target_y_style_al_prompt():
+    cliente_falso = _ClienteGeminiFalso(JSON_BIEN_FORMADO)
+    generador = GeminiContentGenerator(api_key="clave", cliente=cliente_falso)
+
+    contenido = generador.generar(BRAIN_REPORT_EJEMPLO, duration_target="largo", style="humoristico")
+
+    assert contenido.duration_target == "largo"
+    assert contenido.style == "humoristico"
+    # El prompt real enviado debe reflejar esos parámetros, no valores fijos.
+    prompt_enviado = cliente_falso.models.llamadas[0][1]
+    assert "más de 5 minutos" in prompt_enviado
+    assert "humoristico" in prompt_enviado
 
 
 def test_modelo_por_defecto_es_gemini_3_5_flash():
     """Confirma el valor por defecto real usado cuando no se pasa `model`
     explícito — evita que un cambio futuro lo modifique sin darse cuenta."""
-    cliente_falso = _ClienteGeminiFalso("TITULO: X\nGUION:\nY")
+    cliente_falso = _ClienteGeminiFalso(JSON_BIEN_FORMADO)
     generador = GeminiContentGenerator(api_key="clave", cliente=cliente_falso)
 
     assert generador.model == "gemini-3.5-flash"
@@ -76,7 +109,7 @@ def test_modelo_por_defecto_es_gemini_3_5_flash():
 
 
 def test_respeta_modelo_configurado_por_variable():
-    cliente_falso = _ClienteGeminiFalso("TITULO: X\nGUION:\nY")
+    cliente_falso = _ClienteGeminiFalso(JSON_BIEN_FORMADO)
     generador = GeminiContentGenerator(api_key="clave", model="gemini-2.0-flash", cliente=cliente_falso)
 
     generador.generar(BRAIN_REPORT_EJEMPLO)
@@ -87,14 +120,13 @@ def test_respeta_modelo_configurado_por_variable():
 # --- Formato inesperado, no falla -----------------------------------------
 
 
-def test_respuesta_sin_formato_esperado_no_falla():
-    cliente_falso = _ClienteGeminiFalso("Aquí está tu contenido sin seguir el formato pedido.")
+def test_respuesta_sin_json_no_falla_usa_texto_libre():
+    cliente_falso = _ClienteGeminiFalso("Aquí está tu contenido sin seguir el formato JSON pedido.")
     generador = GeminiContentGenerator(api_key="clave", cliente=cliente_falso)
 
     contenido = generador.generar(BRAIN_REPORT_EJEMPLO)
 
-    assert "sin seguir el formato" in contenido.script
-    assert "generado por IA" in contenido.title
+    assert "sin seguir el formato JSON pedido" in contenido.script or contenido.title
 
 
 def test_respuesta_vacia_usa_fallback():
@@ -123,9 +155,6 @@ def test_reintenta_antes_de_caer_al_fallback():
     con espera casi nula para no volver el test lento."""
 
     class _ClienteQueFallaDosVecesYLuegoResponde:
-        def __init__(self):
-            self.llamadas = 0
-
         class models:
             llamadas = 0
 
@@ -134,7 +163,7 @@ def test_reintenta_antes_de_caer_al_fallback():
                 _ClienteQueFallaDosVecesYLuegoResponde.models.llamadas += 1
                 if _ClienteQueFallaDosVecesYLuegoResponde.models.llamadas < 3:
                     raise RuntimeError("429 simulado")
-                return _RespuestaFalsa("TITULO: Al tercer intento\nGUION:\nFuncionó")
+                return _RespuestaFalsa(json.dumps({"titulo": "Al tercer intento", "guion": "Funcionó"}))
 
     cliente = _ClienteQueFallaDosVecesYLuegoResponde()
     generador = GeminiContentGenerator(api_key="clave", cliente=cliente, reintentos=3, espera_inicial=0.01)

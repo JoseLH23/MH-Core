@@ -18,7 +18,7 @@ import requests
 
 from apps.mindhigh.models.content_piece import ContentPiece
 from apps.mindhigh.services.content_generator import ContentGenerator
-from apps.mindhigh.services.llm_prompt import construir_prompt, separar_titulo_y_guion
+from apps.mindhigh.services.llm_prompt import construir_prompt, parsear_respuesta_estructurada
 from mh_core.utils.logger import logger
 from mh_core.utils.retry import reintentar_con_backoff
 
@@ -45,7 +45,7 @@ class GroqContentGenerator:
         self.reintentos = reintentos
         self.espera_inicial = espera_inicial
 
-    def intentar(self, brain_report: dict) -> Optional[ContentPiece]:
+    def intentar(self, brain_report: dict, duration_target: str = "short", style: str = "informativo") -> Optional[ContentPiece]:
         """Solo Groq. None si no hay key o la llamada falla — nunca
         lanza, nunca silencioso."""
         if not self.api_key:
@@ -62,7 +62,9 @@ class GroqContentGenerator:
                     headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
                     json={
                         "model": self.model,
-                        "messages": [{"role": "user", "content": construir_prompt(brain_report)}],
+                        "messages": [
+                            {"role": "user", "content": construir_prompt(brain_report, duration_target, style)}
+                        ],
                     },
                     timeout=30,
                 )
@@ -79,15 +81,16 @@ class GroqContentGenerator:
                 logger.warning("GroqContentGenerator: Groq devolvió una respuesta vacía.")
                 return None
 
-            titulo, guion = separar_titulo_y_guion(texto, topic, "GroqContentGenerator")
+            campos = parsear_respuesta_estructurada(texto, topic, "GroqContentGenerator")
 
             logger.info(f"GroqContentGenerator: contenido generado con Groq ({self.model}) para '{topic}'.")
             return ContentPiece(
                 id=str(uuid.uuid4()),
                 topic=topic,
-                title=titulo,
-                script=guion,
                 source_recommendation=resumen.get("final_recommendation"),
+                duration_target=duration_target,
+                style=style,
+                **campos,
             )
 
         except Exception as e:
@@ -97,8 +100,8 @@ class GroqContentGenerator:
             logger.warning(f"GroqContentGenerator: falló la llamada a Groq ({e}).")
             return None
 
-    def generar(self, brain_report: dict) -> ContentPiece:
-        resultado = self.intentar(brain_report)
+    def generar(self, brain_report: dict, duration_target: str = "short", style: str = "informativo") -> ContentPiece:
+        resultado = self.intentar(brain_report, duration_target, style)
         if resultado is not None:
             return resultado
         logger.warning("GroqContentGenerator: usando generador por plantillas.")

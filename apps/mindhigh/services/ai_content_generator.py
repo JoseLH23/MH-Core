@@ -27,15 +27,15 @@ class AIContentGenerator:
         self.groq = groq or GroqContentGenerator()
         self.fallback = fallback or ContentGenerator()
 
-    def generar(self, brain_report: dict) -> ContentPiece:
-        resultado = self.gemini.intentar(brain_report)
+    def generar(self, brain_report: dict, duration_target: str = "short", style: str = "informativo") -> ContentPiece:
+        resultado = self.gemini.intentar(brain_report, duration_target, style)
         if resultado is not None:
             return resultado
 
         logger.info("AIContentGenerator: Gemini no disponible — probando Groq como respaldo.")
-        resultado = self.groq.intentar(brain_report)
+        resultado = self.groq.intentar(brain_report, duration_target, style)
         if resultado is not None:
             return resultado
 
         logger.warning("AIContentGenerator: ni Gemini ni Groq disponibles — usando generador por plantillas.")
-        return self.fallback.generar(brain_report)
+        return self.fallback.generar(brain_report, duration_target, style)

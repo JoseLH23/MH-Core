@@ -1,13 +1,13 @@
 """
-ContentGenerator — v1 honesto: genera título y guion base a partir del
-`brain_report` REAL de MH-Core (razones, acciones recomendadas,
-patrones detectados), usando plantillas — NO usa ningún modelo de
-lenguaje todavía (no hay ninguna API key de LLM configurada en el
-proyecto). No se inventa una integración de IA falsa.
+ContentGenerator — v1 honesto: genera contenido estructurado a partir
+del `brain_report` REAL de MH-Core, usando plantillas — NO usa ningún
+modelo de lenguaje (es la red de seguridad final si Gemini y Groq
+fallan/no hay key, ver AIContentGenerator).
 
-Cuando se decida qué proveedor de LLM usar, este archivo es el único
-que hay que reemplazar — MindHighPipeline no sabe ni le importa cómo
-se genera el contenido, solo que recibe un ContentPiece.
+Fase "calidad del contenido": ahora produce la misma salida
+estructurada completa que Gemini/Groq (gancho, descripción, hashtags,
+CTA), para que QualityEngine pueda evaluar cualquier fuente por igual
+sin tratar el fallback como un caso especial.
 """
 import uuid
 
@@ -15,21 +15,28 @@ from apps.mindhigh.models.content_piece import ContentPiece
 
 
 class ContentGenerator:
-    def generar(self, brain_report: dict) -> ContentPiece:
+    def generar(self, brain_report: dict, duration_target: str = "short", style: str = "informativo") -> ContentPiece:
         resumen = brain_report.get("executive_summary", {}) or {}
         razones = brain_report.get("reasoning", []) or []
         acciones = brain_report.get("recommended_actions", []) or []
 
         topic = resumen.get("topic") or "tema sin especificar"
-        titulo = self._generar_titulo(topic, resumen)
-        guion = self._generar_guion(topic, resumen, razones, acciones)
+        base = topic.split(":")[0].strip().capitalize()
+        stopwords = {"en", "el", "la", "los", "las", "de", "del", "y", "a", "con", "para", "un", "una"}
+        palabras_hashtag = [p.strip(".,") for p in base.split() if p.strip(".,").lower() not in stopwords]
 
         return ContentPiece(
             id=str(uuid.uuid4()),
             topic=topic,
-            title=titulo,
-            script=guion,
+            title=self._generar_titulo(topic, resumen),
+            hook=f"¿Sabías que {topic} podría cambiar lo que creías saber? Te lo explico.",
+            script=self._generar_guion(topic, resumen, razones, acciones),
+            description=f"En este video hablamos de {topic}. {'; '.join(razones[:2]) if razones else ''}".strip(),
+            hashtags=[f"#{palabra}" for palabra in palabras_hashtag[:3]] or ["#contenido"],
+            cta="Si te sirvió, coméntalo y sigue el canal para más videos como este.",
             source_recommendation=resumen.get("final_recommendation"),
+            duration_target=duration_target,
+            style=style,
         )
 
     def _generar_titulo(self, topic: str, resumen: dict) -> str:

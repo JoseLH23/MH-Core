@@ -1,9 +1,13 @@
+from apps.mindhigh.database.json_content_version_repository import JsonContentVersionRepository
 from apps.mindhigh.engines.metrics_engine import MetricsEngine
 from apps.mindhigh.database.json_metrics_repository import JsonMetricsRepository
 from apps.mindhigh.mindhigh_pipeline import MindHighPipeline
 from apps.mindhigh.models.content_piece import ContentPiece
 from apps.mindhigh.publishing.simulated_publisher import SimulatedPublisher
+from apps.mindhigh.services.ai_content_generator import AIContentGenerator
 from apps.mindhigh.services.content_generator import ContentGenerator
+from apps.mindhigh.services.content_quality_pipeline import ContentQualityPipeline
+from apps.mindhigh.services.quality_engine import QualityEngine
 
 BRAIN_REPORT_EJEMPLO = {
     "executive_summary": {
@@ -107,8 +111,19 @@ def test_metrics_repository_archivo_corrupto_no_falla(tmp_path):
 
 def test_pipeline_completo_conecta_todos_los_pasos(tmp_path):
     repo_metricas = JsonMetricsRepository(tmp_path / "metrics.json")
+    repo_versiones = JsonContentVersionRepository(tmp_path / "content_versions.json")
+    quality_pipeline = ContentQualityPipeline(
+        # Explícito a propósito: ContentGenerator (plantillas) en vez
+        # de AIContentGenerator() por defecto, que intentaría
+        # Gemini/Groq reales si esas keys existen como variables de
+        # entorno en la máquina — un "test unitario" no debe poder
+        # llamar a una API real ni depender del entorno de quien lo corre.
+        content_generator=ContentGenerator(),
+        version_repository=repo_versiones,
+    )
     pipeline = MindHighPipeline(
         research_agent=_ResearchAgentFalso(BRAIN_REPORT_EJEMPLO),
+        quality_pipeline=quality_pipeline,
         publisher=SimulatedPublisher(),
         metrics_engine=MetricsEngine(repository=repo_metricas),
     )
@@ -117,14 +132,28 @@ def test_pipeline_completo_conecta_todos_los_pasos(tmp_path):
 
     assert resultado["research"]["action_taken"] == "PRODUCIR"
     assert "inteligencia artificial" in resultado["content"]["topic"]
-    assert resultado["publish_result"]["simulated"] is True
-    assert resultado["initial_metric"]["content_id"] == resultado["content"]["id"]
+    assert "quality_evaluation" in resultado
+    assert resultado["quality_evaluation"]["content_id"] == resultado["content"]["id"]
+
+    if resultado["quality_evaluation"]["aprobado"]:
+        assert resultado["publish_result"]["simulated"] is True
+        assert resultado["initial_metric"]["content_id"] == resultado["content"]["id"]
+    else:
+        # Honesto: si el contenido por plantillas no llegara a superar
+        # el umbral, no debe haberse publicado nada.
+        assert resultado["publish_result"] is None
+        assert resultado["initial_metric"] is None
 
 
 def test_pipeline_propaga_error_real_de_investigacion(tmp_path):
     repo_metricas = JsonMetricsRepository(tmp_path / "metrics.json")
+    repo_versiones = JsonContentVersionRepository(tmp_path / "content_versions.json")
+    quality_pipeline = ContentQualityPipeline(
+        content_generator=ContentGenerator(), version_repository=repo_versiones
+    )
     pipeline = MindHighPipeline(
         research_agent=_ResearchAgentQueFalla(),
+        quality_pipeline=quality_pipeline,
         metrics_engine=MetricsEngine(repository=repo_metricas),
     )
 

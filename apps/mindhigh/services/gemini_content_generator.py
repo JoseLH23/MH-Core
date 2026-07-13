@@ -19,7 +19,7 @@ from google import genai
 
 from apps.mindhigh.models.content_piece import ContentPiece
 from apps.mindhigh.services.content_generator import ContentGenerator
-from apps.mindhigh.services.llm_prompt import construir_prompt, separar_titulo_y_guion
+from apps.mindhigh.services.llm_prompt import construir_prompt, parsear_respuesta_estructurada
 from mh_core.utils.logger import logger
 from mh_core.utils.retry import reintentar_con_backoff
 
@@ -49,7 +49,7 @@ class GeminiContentGenerator:
             return self._cliente
         return genai.Client(api_key=self.api_key)
 
-    def intentar(self, brain_report: dict) -> Optional[ContentPiece]:
+    def intentar(self, brain_report: dict, duration_target: str = "short", style: str = "informativo") -> Optional[ContentPiece]:
         """Solo Gemini. None si no hay key, la respuesta viene vacía,
         o la llamada falla — nunca lanza, nunca silencioso (todo se
         registra en el log antes de devolver None)."""
@@ -63,7 +63,9 @@ class GeminiContentGenerator:
         try:
             cliente = self._obtener_cliente()
             respuesta = reintentar_con_backoff(
-                lambda: cliente.models.generate_content(model=self.model, contents=construir_prompt(brain_report)),
+                lambda: cliente.models.generate_content(
+                    model=self.model, contents=construir_prompt(brain_report, duration_target, style)
+                ),
                 intentos=self.reintentos,
                 espera_inicial=self.espera_inicial,
                 nombre="Gemini generate_content",
@@ -74,25 +76,27 @@ class GeminiContentGenerator:
                 logger.warning("GeminiContentGenerator: Gemini devolvió una respuesta vacía.")
                 return None
 
-            titulo, guion = separar_titulo_y_guion(texto, topic, "GeminiContentGenerator")
+            campos = parsear_respuesta_estructurada(texto, topic, "GeminiContentGenerator")
 
             logger.info(f"GeminiContentGenerator: contenido generado con Gemini ({self.model}) para '{topic}'.")
             return ContentPiece(
                 id=str(uuid.uuid4()),
                 topic=topic,
-                title=titulo,
-                script=guion,
                 source_recommendation=resumen.get("final_recommendation"),
+                duration_target=duration_target,
+                style=style,
+                **campos,
             )
 
         except Exception as e:
-            # Nunca silencioso: se registra el motivo real (cuota
-            # agotada del nivel gratis, red caída, key inválida, etc.)
+            # Nunca silencioso: se registra el motivo real antes de
+            # devolver None (cuota agotada del nivel gratis, red
+            # caída, key inválida, etc.)
             logger.warning(f"GeminiContentGenerator: falló la llamada a Gemini ({e}).")
             return None
 
-    def generar(self, brain_report: dict) -> ContentPiece:
-        resultado = self.intentar(brain_report)
+    def generar(self, brain_report: dict, duration_target: str = "short", style: str = "informativo") -> ContentPiece:
+        resultado = self.intentar(brain_report, duration_target, style)
         if resultado is not None:
             return resultado
         logger.warning("GeminiContentGenerator: usando generador por plantillas.")

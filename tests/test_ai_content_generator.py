@@ -13,7 +13,7 @@ class _GeminiFalso:
         self.resultado = resultado
         self.llamado = False
 
-    def intentar(self, brain_report):
+    def intentar(self, brain_report, duration_target="short", style="informativo"):
         self.llamado = True
         return self.resultado
 
@@ -23,7 +23,7 @@ class _GroqFalso:
         self.resultado = resultado
         self.llamado = False
 
-    def intentar(self, brain_report):
+    def intentar(self, brain_report, duration_target="short", style="informativo"):
         self.llamado = True
         return self.resultado
 
