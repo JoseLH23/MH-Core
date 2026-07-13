@@ -1,24 +1,25 @@
 """
-GeminiContentGenerator — generación de contenido real con IA (Gemini),
-la pieza que estaba bloqueada por presupuesto (ver Master Plan,
-Sección 8 — José ya configuró GEMINI_API_KEY en .env).
+GeminiContentGenerator — generación real con Gemini.
 
 SDK: `google-genai` (el nuevo, unificado — `google.generativeai` está
 deprecado desde 2025, no se usa aquí a propósito).
 
-FALLBACK HONESTO, mismo patrón que YouTubeResearchEngine/ResearchEngine
-en mh_core: si no hay GEMINI_API_KEY, o la llamada a la API falla por
-cualquier motivo (red, cuota agotada del nivel gratis, etc.), se cae
-al ContentGenerator por plantillas — nunca se rompe el pipeline, y
-siempre queda registrado en el log CUÁL de los dos generó el contenido.
+Expone dos formas de uso:
+  - `intentar()`: SOLO Gemini, sin fallback — devuelve None si no hay
+    key o si falla. La usa AIContentGenerator para encadenar a Groq
+    antes de caer a plantillas.
+  - `generar()`: uso standalone — si `intentar()` devuelve None, cae
+    directo a plantillas (mismo comportamiento que antes de esta fase).
 """
 import os
+import uuid
 from typing import Optional
 
 from google import genai
 
 from apps.mindhigh.models.content_piece import ContentPiece
 from apps.mindhigh.services.content_generator import ContentGenerator
+from apps.mindhigh.services.llm_prompt import construir_prompt, separar_titulo_y_guion
 from mh_core.utils.logger import logger
 
 MODELO_POR_DEFECTO = "gemini-3.5-flash"  # nivel gratis, buen balance velocidad/calidad (jul 2026)
@@ -38,27 +39,27 @@ class GeminiContentGenerator:
             return self._cliente
         return genai.Client(api_key=self.api_key)
 
-    def generar(self, brain_report: dict) -> ContentPiece:
+    def intentar(self, brain_report: dict) -> Optional[ContentPiece]:
+        """Solo Gemini. None si no hay key, la respuesta viene vacía,
+        o la llamada falla — nunca lanza, nunca silencioso (todo se
+        registra en el log antes de devolver None)."""
         if not self.api_key:
-            logger.warning("GeminiContentGenerator: no hay GEMINI_API_KEY. Usando generador por plantillas.")
-            return self._fallback.generar(brain_report)
+            logger.warning("GeminiContentGenerator: no hay GEMINI_API_KEY.")
+            return None
+
+        resumen = brain_report.get("executive_summary", {}) or {}
+        topic = resumen.get("topic") or "tema sin especificar"
 
         try:
-            resumen = brain_report.get("executive_summary", {}) or {}
-            topic = resumen.get("topic") or "tema sin especificar"
-            prompt = self._construir_prompt(brain_report)
-
             cliente = self._obtener_cliente()
-            respuesta = cliente.models.generate_content(model=self.model, contents=prompt)
+            respuesta = cliente.models.generate_content(model=self.model, contents=construir_prompt(brain_report))
             texto = (respuesta.text or "").strip()
 
             if not texto:
-                logger.warning("GeminiContentGenerator: Gemini devolvió una respuesta vacía. Usando plantillas.")
-                return self._fallback.generar(brain_report)
+                logger.warning("GeminiContentGenerator: Gemini devolvió una respuesta vacía.")
+                return None
 
-            titulo, guion = self._separar_titulo_y_guion(texto, topic)
-
-            import uuid
+            titulo, guion = separar_titulo_y_guion(texto, topic, "GeminiContentGenerator")
 
             logger.info(f"GeminiContentGenerator: contenido generado con Gemini ({self.model}) para '{topic}'.")
             return ContentPiece(
@@ -70,41 +71,14 @@ class GeminiContentGenerator:
             )
 
         except Exception as e:
-            # Nunca silencioso: se registra el motivo real antes de
-            # caer al fallback (cuota agotada del nivel gratis, red
-            # caída, key inválida, lo que sea).
-            logger.warning(f"GeminiContentGenerator: falló la llamada a Gemini ({e}). Usando plantillas.")
-            return self._fallback.generar(brain_report)
+            # Nunca silencioso: se registra el motivo real (cuota
+            # agotada del nivel gratis, red caída, key inválida, etc.)
+            logger.warning(f"GeminiContentGenerator: falló la llamada a Gemini ({e}).")
+            return None
 
-    def _construir_prompt(self, brain_report: dict) -> str:
-        resumen = brain_report.get("executive_summary", {}) or {}
-        razones = brain_report.get("reasoning", []) or []
-        acciones = brain_report.get("recommended_actions", []) or []
-
-        return (
-            "Eres un guionista experto en contenido de YouTube en español.\n"
-            f"Tema recomendado: {resumen.get('topic', 'sin especificar')}\n"
-            f"Razones de la recomendación: {'; '.join(razones) if razones else 'ninguna'}\n"
-            f"Acciones sugeridas: {'; '.join(acciones) if acciones else 'ninguna'}\n\n"
-            "Escribe:\n"
-            "1) Una sola línea con el TÍTULO del video (sin comillas, sin la palabra 'Título:').\n"
-            "2) Un guion base breve (gancho inicial, 2-3 puntos clave, cierre con llamado a la acción).\n\n"
-            "Formato de tu respuesta, exacto:\n"
-            "TITULO: <el título aquí>\n"
-            "GUION:\n<el guion aquí>"
-        )
-
-    def _separar_titulo_y_guion(self, texto: str, topic: str) -> tuple[str, str]:
-        """Parseo tolerante: si Gemini no siguió el formato exacto
-        pedido, no se rompe — se usa todo el texto como guion y un
-        título genérico basado en el tema real."""
-        if "TITULO:" in texto and "GUION:" in texto:
-            despues_de_titulo = texto.split("TITULO:", 1)[1]
-            partes = despues_de_titulo.split("GUION:", 1)
-            if len(partes) == 2:
-                parte_titulo, parte_guion = partes[0].strip(), partes[1].strip()
-                if parte_titulo and parte_guion:
-                    return parte_titulo, parte_guion
-
-        logger.info("GeminiContentGenerator: la respuesta no siguió el formato TITULO/GUION esperado; se usa tal cual.")
-        return f"{topic.capitalize()} (generado por IA)", texto
+    def generar(self, brain_report: dict) -> ContentPiece:
+        resultado = self.intentar(brain_report)
+        if resultado is not None:
+            return resultado
+        logger.warning("GeminiContentGenerator: usando generador por plantillas.")
+        return self._fallback.generar(brain_report)
