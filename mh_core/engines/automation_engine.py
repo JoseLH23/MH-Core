@@ -37,6 +37,14 @@ class AutomationEngine:
 
         self._hilo: Optional[threading.Thread] = None
         self._detener = threading.Event()
+        # AL-12 (auditoría de seguridad 13/jul/2026, mitigación PARCIAL
+        # real): evita que una ejecución manual (run_once) y el
+        # scheduler automático corran al mismo tiempo dentro de este
+        # mismo proceso, pisándose entre sí. NO es un lock distribuido
+        # — si algún día corren varios workers/procesos, esto no los
+        # coordina entre sí (documentado como pendiente real, no
+        # resuelto del todo).
+        self._lock_ejecucion = threading.Lock()
 
         self.ultima_ejecucion: Optional[str] = None
         self.ultimo_resultado: Optional[dict] = None
@@ -46,7 +54,13 @@ class AutomationEngine:
     def run_once(self, remember: bool = True) -> dict:
         """Ejecuta el pipeline completo una vez, ahora mismo. Nunca
         lanza silenciosamente — si algo falla, se registra Y se
-        levanta, para que quien llame decida qué hacer."""
+        levanta, para que quien llame decida qué hacer.
+
+        AL-12: si ya hay una ejecución en curso (manual o del
+        scheduler), se rechaza en vez de correr las dos a la vez."""
+        if not self._lock_ejecucion.acquire(blocking=False):
+            raise RuntimeError("Ya hay una ejecución en curso — se rechaza para no correr dos a la vez.")
+
         try:
             fuente = self._obtener_fuente()
             videos = fuente.get("top_videos", [])
@@ -76,6 +90,9 @@ class AutomationEngine:
             self.ultimo_error = str(e)
             logger.warning(f"AutomationEngine: la ejecución falló ({e}).")
             raise
+
+        finally:
+            self._lock_ejecucion.release()
 
     def esta_activo(self) -> bool:
         return self._hilo is not None and self._hilo.is_alive()

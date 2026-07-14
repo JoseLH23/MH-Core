@@ -60,3 +60,32 @@ def test_raiz_sigue_siendo_publica():
     respuesta = client.get("/")
 
     assert respuesta.status_code == 200
+
+
+# --- AL-09: GET ya no dispara trabajo real -------------------------------
+
+
+def test_research_ranking_ya_no_acepta_get(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from mh_core.app import app
+
+    monkeypatch.setenv("MH_CORE_API_KEY", "clave-de-pruebas")
+    client = TestClient(app)
+
+    respuesta = client.get("/research/ranking", headers={"X-API-Key": "clave-de-pruebas"})
+    assert respuesta.status_code == 405  # method not allowed -- ya no es GET
+
+
+def test_research_learning_sigue_siendo_get_de_solo_lectura(monkeypatch):
+    """learning() solo lee un resumen ya guardado -- no dispara
+    investigación nueva, así que se queda como GET a propósito."""
+    from fastapi.testclient import TestClient
+
+    from mh_core.app import app
+
+    monkeypatch.setenv("MH_CORE_API_KEY", "clave-de-pruebas")
+    client = TestClient(app)
+
+    respuesta = client.get("/research/learning", headers={"X-API-Key": "clave-de-pruebas"})
+    assert respuesta.status_code == 200

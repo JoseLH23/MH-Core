@@ -158,3 +158,53 @@ def test_fallo_al_notificar_no_tumba_la_ejecucion(tmp_path):
     resultado = motor.run_once()
     assert "brain_report" in resultado
     assert motor.ultimo_error is None
+
+
+# --- AL-12 (mitigación parcial, en proceso): sin ejecuciones simultáneas ---
+
+
+def test_run_once_rechaza_ejecucion_simultanea(tmp_path):
+    """Mientras una ejecución real está en curso (bloqueada dentro de
+    _obtener_fuente), una segunda llamada a run_once() debe
+    rechazarse, no correr encima de la primera."""
+    import threading
+
+    evento_dentro = threading.Event()
+    evento_liberar = threading.Event()
+
+    def _fuente_lenta():
+        evento_dentro.set()
+        evento_liberar.wait(timeout=5)
+        return _fuente_falsa()
+
+    motor = _motor_aislado(tmp_path, obtener_fuente=_fuente_lenta)
+
+    hilo = threading.Thread(target=motor.run_once)
+    hilo.start()
+    evento_dentro.wait(timeout=5)  # esperar a que la primera ya esté "dentro"
+
+    try:
+        motor.run_once()
+        assert False, "debía rechazar la segunda ejecución simultánea"
+    except RuntimeError as e:
+        assert "ya hay una ejecución en curso" in str(e).lower()
+    finally:
+        evento_liberar.set()
+        hilo.join(timeout=5)
+
+
+def test_run_once_libera_el_lock_incluso_si_falla(tmp_path):
+    """El lock no debe quedar atascado para siempre si la primera
+    ejecución falla."""
+    motor = _motor_aislado(tmp_path, obtener_fuente=_fuente_que_falla)
+
+    try:
+        motor.run_once()
+    except RuntimeError:
+        pass
+
+    # Si el lock se liberó bien, esta segunda llamada NO debe rechazarse
+    # por "ejecución en curso" (puede fallar por otra razón, pero no por eso).
+    motor2 = _motor_aislado(tmp_path)
+    resultado = motor2.run_once()
+    assert "brain_report" in resultado
