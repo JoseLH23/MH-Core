@@ -104,7 +104,13 @@ class MemoryEngine:
         if not memorias:
             return {
                 "total_memories": 0,
-                "message": "Todavía no hay historial suficiente para aprender.",
+                "most_common_topics": [],
+                "most_common_decisions": [],
+                "most_common_channels": [],
+                "most_common_priorities": [],
+                "most_common_opportunity_levels": [],
+                "average_mh_score": 0,
+                "message": "Todav?a no hay historial suficiente para aprender.",
             }
 
         topics = [m.topic for m in memorias if m.topic]
