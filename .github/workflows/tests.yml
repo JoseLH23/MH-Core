@@ -1,39 +1,46 @@
-name: Tests
+name: MH-Core CI
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mh-core-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  pytest:
+  tests:
+    name: Tests con Python 3.11
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      PYTHONPATH: .
+      MH_CORE_API_KEY: clave-ci-segura-nunca-usar-en-produccion-1234567890
 
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
+      - name: Descargar repositorio
+        uses: actions/checkout@v7
 
-      - name: Configurar Python 3.11
-        uses: actions/setup-python@v5
+      - name: Configurar Python
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-          cache: "pip"
+          cache: pip
 
       - name: Instalar dependencias
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Correr el suite completo
-        env:
-          PYTHONPATH: .
-          # Sin API keys reales aquí a propósito — los tests nunca
-          # deben depender de red real ni de cuotas de Gemini/Groq/
-          # YouTube (todos usan dobles inyectados). Si algún test
-          # llegara a necesitar una key real, es un bug del test,
-          # no algo que este workflow deba resolver con secrets.
+      - name: Ejecutar pruebas
         run: pytest -q
 
-      - name: Confirmar que la app importa sin errores
-        env:
-          PYTHONPATH: .
+      - name: Verificar importación de la aplicación
         run: python -c "import mh_core.app; print('mh_core.app importa correctamente')"
