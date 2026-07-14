@@ -250,3 +250,34 @@ def test_smoke_render_real_corto_de_punta_a_punta(tmp_path):
     assert ruta_video.exists()
     assert ruta_video.stat().st_size > 1000  # un MP4 real pesa más que unos bytes vacíos
     assert final.duration_seconds is not None and final.duration_seconds > 0
+
+
+# --- Bug real de Windows: escapado de rutas para el filtro de FFmpeg ------
+# FFmpeg usa '\' como caracter de escape DENTRO de un argumento de
+# filtro (-vf) — una ruta real de Windows ("C:\Users\...") se rompía
+# ahi: cada '\' se comia el caracter siguiente, dejando una ruta
+# ilegible tipo "C:UsersJoseLariosAppData...". Solo se ve en Windows
+# (las rutas de Linux/Mac usan '/', que no tiene este problema).
+
+
+def test_escapar_ruta_windows_no_deja_backslashes_sin_convertir():
+    from pathlib import PureWindowsPath
+
+    from apps.mindhigh.video.video_renderer import _escapar_ruta_para_filtro
+
+    ruta = PureWindowsPath(r"C:\Users\José Larios\AppData\Local\Temp\subtitulos.srt")
+    resultado = _escapar_ruta_para_filtro(ruta)
+
+    assert "\\U" not in resultado  # ninguna diagonal seguida de letra (lo que FFmpeg mal interpretaba)
+    assert "José" in resultado  # el texto real no se corrompe
+    assert resultado.startswith("C\\:/")  # unidad escapada, resto con '/'
+
+
+def test_escapar_ruta_linux_no_se_rompe():
+    """En Linux/Mac (donde ya funcionaba) el comportamiento no debe cambiar."""
+    from apps.mindhigh.video.video_renderer import _escapar_ruta_para_filtro
+
+    ruta = Path("/tmp/render-123/subtitulos.srt")
+    resultado = _escapar_ruta_para_filtro(ruta)
+
+    assert resultado == "/tmp/render-123/subtitulos.srt"

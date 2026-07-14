@@ -97,7 +97,7 @@ class VideoProductionEngine:
     def _medir_duracion(self, audio_path: Path) -> float:
         resultado = subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", str(audio_path)],
-            capture_output=True, text=True,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
         )
         try:
             return float(resultado.stdout.strip())

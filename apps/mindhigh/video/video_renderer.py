@@ -17,12 +17,37 @@ RESOLUCION = "1280x720"
 COLOR_FONDO = "0x0d1b2a"  # mismo tono oscuro que el panel — sin depender de ningún archivo externo
 
 
+def _escapar_texto_para_filtro(texto: str) -> str:
+    return texto.replace("\\", r"\\").replace("'", r"\'").replace(":", r"\:")
+
+
+def _escapar_ruta_para_filtro(ruta: Path) -> str:
+    """
+    Bug real encontrado en Windows (no se ve en Linux/Mac, donde las
+    rutas usan '/'): dentro de un argumento de filtro de FFmpeg, '\\'
+    es el CARÁCTER DE ESCAPE — una ruta real de Windows como
+    'C:\\Users\\...\\subtitulos.srt' se pasaba tal cual, y FFmpeg
+    interpretaba cada '\\' como inicio de una secuencia de escape,
+    comiéndose las diagonales enteras (el archivo terminaba
+    literalmente ilegible: "C:UsersJoséLariosAppData...").
+
+    Arreglo estándar de FFmpeg para esto: convertir '\\' a '/' primero
+    (Windows acepta '/' igual de bien para abrir archivos) y solo
+    entonces escapar ':' (la unidad, "C:") — así nunca hay una '\\'
+    real que FFmpeg pueda malinterpretar.
+    """
+    texto = str(ruta).replace("\\", "/")
+    texto = texto.replace(":", r"\:")
+    texto = texto.replace("'", r"\'")
+    return texto
+
+
 class VideoRenderer:
     def renderizar(self, titulo: str, audio_path: Path, srt_path: Path, duracion: float, salida_path: Path) -> subprocess.Popen:
         salida_path.parent.mkdir(parents=True, exist_ok=True)
 
-        titulo_escapado = titulo.replace("'", r"\'").replace(":", r"\:")
-        srt_escapado = str(srt_path).replace("'", r"\'").replace(":", r"\:")
+        titulo_escapado = _escapar_texto_para_filtro(titulo)
+        srt_escapado = _escapar_ruta_para_filtro(srt_path)
 
         filtro_video = (
             f"drawtext=text='{titulo_escapado}':fontcolor=white:fontsize=42:"
@@ -39,4 +64,7 @@ class VideoRenderer:
             "-c:a", "aac", "-shortest",
             str(salida_path),
         ]
-        return subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        return subprocess.Popen(
+            comando, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, encoding="utf-8", errors="replace",
+        )
