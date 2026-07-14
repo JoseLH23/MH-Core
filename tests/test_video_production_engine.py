@@ -1,4 +1,6 @@
+import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -65,12 +67,12 @@ class _RendererFalso:
     def renderizar(self, titulo, audio_path, srt_path, duracion, salida_path):
         self.llamado_con = {"titulo": titulo, "salida": salida_path}
         if self.falla:
-            comando = ["python3", "-c", "import sys; sys.exit(1)"]
+            comando = [sys.executable, "-c", "import sys; sys.exit(1)"]
         elif self.tardar_segundos:
-            comando = ["python3", "-c", f"import time; time.sleep({self.tardar_segundos})"]
+            comando = [sys.executable, "-c", f"import time; time.sleep({self.tardar_segundos})"]
         else:
             salida_path.parent.mkdir(parents=True, exist_ok=True)
-            comando = ["python3", "-c", f"open(r'{salida_path}', 'wb').write(b'mp4 falso')"]
+            comando = [sys.executable, "-c", f"open(r'{salida_path}', 'wb').write(b'mp4 falso')"]
         return subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
 
@@ -210,7 +212,11 @@ def test_reintentar_render_no_fallido_es_rechazado(tmp_path):
 
 
 @pytest.mark.skipif(
-    subprocess.run(["which", "ffmpeg"], capture_output=True).returncode != 0,
+    # shutil.which() es multiplataforma real (Windows/Linux/Mac) — el
+    # bug real que reemplaza esto era `subprocess.run(["which", ...])`,
+    # que solo existe en Linux/Mac. En Windows tronaba la COLECCIÓN
+    # completa de tests con FileNotFoundError, no solo este test.
+    shutil.which("ffmpeg") is None,
     reason="FFmpeg no está instalado en este entorno",
 )
 def test_smoke_render_real_corto_de_punta_a_punta(tmp_path):

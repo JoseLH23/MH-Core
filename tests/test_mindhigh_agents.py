@@ -24,10 +24,11 @@ class _TTSFalso:
 class _RendererFalso:
     def renderizar(self, titulo, audio_path, srt_path, duracion, salida_path):
         import subprocess
+        import sys
 
         salida_path.parent.mkdir(parents=True, exist_ok=True)
         return subprocess.Popen(
-            ["python3", "-c", f"open(r'{salida_path}', 'wb').write(b'mp4 falso')"],
+            [sys.executable, "-c", f"open(r'{salida_path}', 'wb').write(b'mp4 falso')"],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
         )
 
