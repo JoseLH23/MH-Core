@@ -41,9 +41,10 @@ class MarketingCampaignService:
     def generate(self, brief: CampaignBrief) -> MarketingCampaign:
         # Obliga a cargar las fuentes esenciales antes de generar. El texto no se
         # usa como licencia para inventar: únicamente establece identidad y oferta.
-        self.knowledge.by_id("brand-foundation")
-        self.knowledge.by_id("marketing-strategy")
-        self.knowledge.by_id("ejixhole-offer")
+        self.knowledge.by_id("brand")
+        self.knowledge.by_id("marketing_strategy")
+        self.knowledge.by_id("offer")
+        self.knowledge.by_id("agent_rules")
 
         contents = tuple(self._content_for(channel, brief) for channel in brief.channels)
         self._validate_dynamic_claims(contents, brief.approved_dynamic_facts)
@@ -107,12 +108,14 @@ class MarketingCampaignService:
         contents: tuple[ChannelContent, ...],
         approved_facts: list[str],
     ) -> None:
-        approved = "\n".join(approved_facts).casefold()
+        approved = [fact.casefold() for fact in approved_facts]
         for content in contents:
             combined = " ".join((content.headline, content.body, content.call_to_action))
+            combined_folded = combined.casefold()
             for match in self.DYNAMIC_CLAIM_PATTERN.finditer(combined):
                 claim = match.group(0).casefold()
-                if claim not in approved:
+                supported = any(claim in fact and fact in combined_folded for fact in approved)
+                if not supported:
                     raise UnsafeMarketingClaimError(
                         f"Dato comercial dinámico no aprobado: {match.group(0)}"
                     )
