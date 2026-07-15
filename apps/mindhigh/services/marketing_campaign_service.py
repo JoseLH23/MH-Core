@@ -39,8 +39,6 @@ class MarketingCampaignService:
         self.knowledge = knowledge
 
     def generate(self, brief: CampaignBrief) -> MarketingCampaign:
-        # Obliga a cargar las fuentes esenciales antes de generar. El texto no se
-        # usa como licencia para inventar: únicamente establece identidad y oferta.
         self.knowledge.by_id("brand")
         self.knowledge.by_id("marketing_strategy")
         self.knowledge.by_id("offer")
@@ -92,7 +90,10 @@ class MarketingCampaignService:
     @staticmethod
     def _body(channel: MarketingChannel, brief: CampaignBrief, message: str) -> str:
         if channel in {MarketingChannel.INSTAGRAM_STORY, MarketingChannel.WHATSAPP_STATUS}:
-            return f"{message.capitalize()}. Una idea para {brief.audience} que buscan {brief.main_emotion}."
+            return (
+                f"En EjiXhole, {message}. Una idea para {brief.audience} "
+                f"que buscan {brief.main_emotion}."
+            )
         if channel == MarketingChannel.GOOGLE_BUSINESS:
             return (
                 f"Descubre EjiXhole y {message}. Consulta en el portal oficial la información "
