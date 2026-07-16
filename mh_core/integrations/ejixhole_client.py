@@ -1,7 +1,10 @@
 """Cliente HTTP de solo lectura para EjiXhole API v1."""
 from __future__ import annotations
 
+from datetime import date, datetime
+from decimal import Decimal
 import os
+from typing import Literal
 from urllib.parse import urlparse
 
 import requests
@@ -19,25 +22,25 @@ class EjixholeUpstreamError(RuntimeError):
 class OperationalMetrics(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    ingresos_hoy: float
-    ingresos_mes: float
+    ingresos_hoy: Decimal
+    ingresos_mes: Decimal
     reservaciones_activas: int
     proximas_7_dias: int
-    saldo_pendiente_total: float
+    saldo_pendiente_total: Decimal
     tasa_cancelacion_mes: float
     ocupacion_promedio_mes: float
-    diferencia_caja_hoy: float
+    diferencia_caja_hoy: Decimal
 
 
 class EjixholeOperationalSummary(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    generated_at: str
-    business_date: str
-    source: str
-    api_version: str
-    access: str
-    scope: str
+    generated_at: datetime
+    business_date: date
+    source: Literal["ejixhole"]
+    api_version: Literal["v1"]
+    access: Literal["read_only"]
+    scope: Literal["ejixhole:read:operations"]
     metrics: OperationalMetrics
 
 
@@ -121,10 +124,6 @@ class EjixholeClient:
 
         try:
             payload = response.json()
-            summary = EjixholeOperationalSummary.model_validate(payload)
+            return EjixholeOperationalSummary.model_validate(payload)
         except (ValueError, ValidationError) as exc:
             raise EjixholeUpstreamError("EjiXhole devolvió un contrato inválido.") from exc
-
-        if summary.access != "read_only" or summary.scope != "ejixhole:read:operations":
-            raise EjixholeUpstreamError("EjiXhole devolvió un alcance inesperado.")
-        return summary
