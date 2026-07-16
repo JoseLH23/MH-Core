@@ -67,7 +67,7 @@ async def receive_ejixhole_event(
         envelope = EjixholeEventEnvelope.model_validate_json(body)
     except ValidationError as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="El contrato del evento es inválido.",
         ) from exc
 
