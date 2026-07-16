@@ -20,6 +20,7 @@ from apps.mindhigh.routes.video_routes import router as video_router
 from apps.mindhigh.routes.mindhigh_agent_routes import router as mindhigh_agent_router
 from mh_core.routes.notification_routes import router as notification_router
 from mh_core.routes.ejixhole_routes import router as ejixhole_router
+from mh_core.routes.ejixhole_event_routes import router as ejixhole_event_router
 
 
 app = FastAPI(
@@ -34,6 +35,11 @@ app = FastAPI(
 _auth = [Depends(verificar_api_key)]
 
 app.include_router(dashboard_router_publico)  # solo el HTML del panel, sin X-API-Key
+
+# Webhook máquina-a-máquina: no usa la API key humana. Verifica una firma HMAC,
+# timestamp corto y deduplicación durable antes de aceptar cualquier evento.
+app.include_router(ejixhole_event_router)
+
 app.include_router(research_router, dependencies=_auth)
 app.include_router(dashboard_router, dependencies=_auth)
 app.include_router(core_router, dependencies=_auth)
