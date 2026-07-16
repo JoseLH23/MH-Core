@@ -1,11 +1,18 @@
-"""Webhook privado para eventos firmados enviados por EjiXhole."""
+"""Webhook privado y diagnóstico de eventos enviados por EjiXhole."""
 from __future__ import annotations
 
 import os
+from uuid import UUID
 
-from fastapi import APIRouter, Header, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from pydantic import ValidationError
 
+from mh_core.core.auth import verificar_api_key
+from mh_core.integrations.ejixhole_event_status import (
+    EjixholeEventInboxInspector,
+    EjixholeInboxEventStatus,
+    EjixholeInboxStatus,
+)
 from mh_core.integrations.ejixhole_events import (
     EVENT_CONTRACT_VERSION,
     MAX_EVENT_BODY_BYTES,
@@ -20,6 +27,33 @@ from mh_core.integrations.ejixhole_events import (
 
 
 router = APIRouter(prefix="/integrations/ejixhole", tags=["Integraciones"])
+
+
+@router.get(
+    "/events/status",
+    response_model=EjixholeInboxStatus,
+    dependencies=[Depends(verificar_api_key)],
+)
+def event_channel_status():
+    """Muestra salud y conteos sin exponer payloads ni la ruta del volumen."""
+    return EjixholeEventInboxInspector(
+        os.getenv("EJIXHOLE_EVENT_INBOX_PATH")
+    ).status()
+
+
+@router.get(
+    "/events/{event_id}",
+    response_model=EjixholeInboxEventStatus,
+    dependencies=[Depends(verificar_api_key)],
+)
+def received_event_status(event_id: UUID):
+    """Confirma que un UUID existe una sola vez en la bandeja de entrada."""
+    event = EjixholeEventInboxInspector(
+        os.getenv("EJIXHOLE_EVENT_INBOX_PATH")
+    ).event(event_id)
+    if event is None:
+        raise HTTPException(status_code=404, detail="Evento no recibido por MH-Core.")
+    return event
 
 
 @router.post(
