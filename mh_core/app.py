@@ -2,9 +2,7 @@ from dotenv import load_dotenv
 
 # Debe ir ANTES de cualquier import de mh_core/apps — varios módulos
 # leen variables de entorno (YOUTUBE_API_KEY, GEMINI_API_KEY, etc.) en
-# el momento en que se importan, no de forma perezosa. Antes de esto,
-# el proyecto no cargaba .env en ningún lado — solo funcionaba si la
-# variable ya estaba exportada en el sistema/PowerShell.
+# el momento en que se importan, no de forma perezosa.
 load_dotenv()
 
 from fastapi import Depends, FastAPI
@@ -21,23 +19,18 @@ from apps.mindhigh.routes.mindhigh_agent_routes import router as mindhigh_agent_
 from mh_core.routes.notification_routes import router as notification_router
 from mh_core.routes.ejixhole_routes import router as ejixhole_router
 from mh_core.routes.ejixhole_event_routes import router as ejixhole_event_router
+from mh_core.routes.ejixhole_operations_routes import router as ejixhole_operations_router
+from mh_core.routes.ejixhole_daily_routes import router as ejixhole_daily_router
 
 
-app = FastAPI(
-    title="MindHigh Core",
-    version="1.0"
-)
+app = FastAPI(title="MindHigh Core", version="1.0")
 
-# CR-04 (auditoría de seguridad 13/jul/2026): deny-by-default real —
-# TODOS los routers requieren X-API-Key (ver mh_core/core/auth.py).
-# Se aplica aquí, centralizado, en vez de en cada archivo de rutas por
-# separado — un solo lugar deja claro qué está protegido.
+# Deny-by-default para todos los routers de datos.
 _auth = [Depends(verificar_api_key)]
 
-app.include_router(dashboard_router_publico)  # solo el HTML del panel, sin X-API-Key
+app.include_router(dashboard_router_publico)
 
-# Webhook máquina-a-máquina: no usa la API key humana. Verifica una firma HMAC,
-# timestamp corto y deduplicación durable antes de aceptar cualquier evento.
+# Webhook máquina-a-máquina: usa firma HMAC, no la API key humana.
 app.include_router(ejixhole_event_router)
 
 app.include_router(research_router, dependencies=_auth)
@@ -51,16 +44,13 @@ app.include_router(video_router, dependencies=_auth)
 app.include_router(mindhigh_agent_router, dependencies=_auth)
 app.include_router(notification_router, dependencies=_auth)
 app.include_router(ejixhole_router, dependencies=_auth)
+app.include_router(ejixhole_operations_router)
+app.include_router(ejixhole_daily_router)
 
-# "/" se deja SIN proteger a propósito — es el liveness check mínimo
-# que usan servicios de monitoreo/infra (Render, uptime checks) y no
-# revela nada sensible. Todo lo demás, incluido /status, sí requiere
-# X-API-Key.
+
 @app.get("/")
 def home():
-    return {
-        "message": "MH Core API v1.0 - Running"
-    }
+    return {"message": "MH Core API v1.0 - Running"}
 
 
 @app.get("/status", dependencies=_auth)
@@ -68,5 +58,5 @@ def status():
     return {
         "status": "online",
         "project": "MindHigh Core",
-        "version": "1.0"
+        "version": "1.0",
     }
