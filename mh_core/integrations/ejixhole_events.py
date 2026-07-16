@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 import sqlite3
 import time
-from typing import Any, Literal
+from typing import Any, Callable, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -171,7 +171,7 @@ class EjixholeEventVerifier:
         self,
         secret: str | None = None,
         max_age_seconds: int | None = None,
-        now: callable | None = None,
+        now: Callable[[], float] | None = None,
     ) -> None:
         configured_secret = (
             secret if secret is not None else os.getenv("EJIXHOLE_EVENT_SIGNING_SECRET", "")
@@ -236,7 +236,9 @@ class EjixholeEventVerifier:
             self.secret.encode("utf-8"), signed_content, hashlib.sha256
         ).hexdigest()
         provided = signature[len(EVENT_SIGNATURE_PREFIX) :]
-        if not hmac.compare_digest(provided.encode("ascii", "ignore"), expected.encode("ascii")):
+        if not hmac.compare_digest(
+            provided.encode("ascii", "ignore"), expected.encode("ascii")
+        ):
             raise EjixholeEventAuthenticationError("Firma del evento inválida.")
 
         return parsed_event_id
