@@ -19,6 +19,7 @@ from apps.mindhigh.routes.orchestrator_routes import router as mindhigh_orchestr
 from apps.mindhigh.routes.video_routes import router as video_router
 from apps.mindhigh.routes.mindhigh_agent_routes import router as mindhigh_agent_router
 from mh_core.routes.notification_routes import router as notification_router
+from mh_core.routes.ejixhole_routes import router as ejixhole_router
 
 
 app = FastAPI(
@@ -43,6 +44,7 @@ app.include_router(mindhigh_orchestrator_router, dependencies=_auth)
 app.include_router(video_router, dependencies=_auth)
 app.include_router(mindhigh_agent_router, dependencies=_auth)
 app.include_router(notification_router, dependencies=_auth)
+app.include_router(ejixhole_router, dependencies=_auth)
 
 # "/" se deja SIN proteger a propósito — es el liveness check mínimo
 # que usan servicios de monitoreo/infra (Render, uptime checks) y no
