@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   snapshot:
+    name: Guardar predicción diaria
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -41,12 +42,7 @@ jobs:
               "$endpoint" || true)
 
             if [ "$code" = "200" ]; then
-              python - <<'PY'
-import json
-with open("response.json", encoding="utf-8") as file:
-    payload = json.load(file)
-print("Predicción guardada:", payload.get("business_date"), payload.get("confidence"))
-PY
+              python -c 'import json; payload=json.load(open("response.json", encoding="utf-8")); print("Predicción guardada:", payload.get("business_date"), payload.get("confidence"))'
               exit 0
             fi
 
