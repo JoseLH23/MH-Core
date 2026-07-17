@@ -21,6 +21,7 @@ from mh_core.routes.ejixhole_routes import router as ejixhole_router
 from mh_core.routes.ejixhole_event_routes import router as ejixhole_event_router
 from mh_core.routes.ejixhole_operations_routes import router as ejixhole_operations_router
 from mh_core.routes.ejixhole_daily_routes import router as ejixhole_daily_router
+from mh_core.routes.ejixhole_executive_routes import router as ejixhole_executive_router
 
 
 app = FastAPI(title="MindHigh Core", version="1.0")
@@ -46,6 +47,7 @@ app.include_router(notification_router, dependencies=_auth)
 app.include_router(ejixhole_router, dependencies=_auth)
 app.include_router(ejixhole_operations_router)
 app.include_router(ejixhole_daily_router)
+app.include_router(ejixhole_executive_router)
 
 
 @app.get("/")
