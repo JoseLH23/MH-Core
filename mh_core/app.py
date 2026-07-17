@@ -1,8 +1,5 @@
 from dotenv import load_dotenv
 
-# Debe ir ANTES de cualquier import de mh_core/apps — varios módulos
-# leen variables de entorno (YOUTUBE_API_KEY, GEMINI_API_KEY, etc.) en
-# el momento en que se importan, no de forma perezosa.
 load_dotenv()
 
 from fastapi import Depends, FastAPI
@@ -22,18 +19,13 @@ from mh_core.routes.ejixhole_event_routes import router as ejixhole_event_router
 from mh_core.routes.ejixhole_operations_routes import router as ejixhole_operations_router
 from mh_core.routes.ejixhole_daily_routes import router as ejixhole_daily_router
 from mh_core.routes.ejixhole_executive_routes import router as ejixhole_executive_router
-
+from mh_core.routes.ejixhole_predictions_routes import router as ejixhole_predictions_router
 
 app = FastAPI(title="MindHigh Core", version="1.0")
-
-# Deny-by-default para todos los routers de datos.
 _auth = [Depends(verificar_api_key)]
 
 app.include_router(dashboard_router_publico)
-
-# Webhook máquina-a-máquina: usa firma HMAC, no la API key humana.
 app.include_router(ejixhole_event_router)
-
 app.include_router(research_router, dependencies=_auth)
 app.include_router(dashboard_router, dependencies=_auth)
 app.include_router(core_router, dependencies=_auth)
@@ -48,6 +40,7 @@ app.include_router(ejixhole_router, dependencies=_auth)
 app.include_router(ejixhole_operations_router)
 app.include_router(ejixhole_daily_router)
 app.include_router(ejixhole_executive_router)
+app.include_router(ejixhole_predictions_router)
 
 
 @app.get("/")
@@ -57,8 +50,4 @@ def home():
 
 @app.get("/status", dependencies=_auth)
 def status():
-    return {
-        "status": "online",
-        "project": "MindHigh Core",
-        "version": "1.0",
-    }
+    return {"status": "online", "project": "MindHigh Core", "version": "1.0"}
