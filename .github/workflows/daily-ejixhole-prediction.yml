@@ -1,0 +1,53 @@
+name: Predicción diaria de EjiXhole
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 12 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirmar configuración
+        env:
+          MH_CORE_API_KEY: ${{ secrets.MH_CORE_API_KEY }}
+        run: |
+          test -n "$MH_CORE_API_KEY" || { echo "Falta el secret MH_CORE_API_KEY"; exit 1; }
+
+      - name: Despertar MH-Core y guardar predicción
+        env:
+          MH_CORE_API_KEY: ${{ secrets.MH_CORE_API_KEY }}
+          MH_CORE_URL: ${{ vars.MH_CORE_URL }}
+        run: |
+          BASE_URL="${MH_CORE_URL:-https://mh-core.onrender.com}"
+          endpoint="${BASE_URL%/}/integrations/ejixhole/predictions"
+
+          for attempt in 1 2 3; do
+            code=$(curl --silent --show-error --output response.json --write-out "%{http_code}" \
+              --connect-timeout 20 --max-time 90 \
+              -H "X-API-Key: $MH_CORE_API_KEY" \
+              -H "Accept: application/json" \
+              "$endpoint" || true)
+
+            if [ "$code" = "200" ]; then
+              python - <<'PY'
+import json
+with open("response.json", encoding="utf-8") as file:
+    payload = json.load(file)
+print("Predicción guardada:", payload.get("business_date"), payload.get("confidence"))
+PY
+              exit 0
+            fi
+
+            echo "Intento $attempt: MH-Core respondió HTTP $code"
+            cat response.json 2>/dev/null || true
+            sleep 20
+          done
+
+          echo "No fue posible guardar la predicción diaria"
+          exit 1
