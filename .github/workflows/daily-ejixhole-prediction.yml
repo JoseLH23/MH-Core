@@ -2,6 +2,12 @@ name: Predicción diaria de EjiXhole
 
 on:
   workflow_dispatch:
+    inputs:
+      reason:
+        description: "Motivo opcional de la ejecución manual"
+        required: false
+        default: "Prueba manual"
+        type: string
   schedule:
     - cron: "17 12 * * *"
 
