@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 
 from mh_core.integrations.ejixhole_calibrated_predictions import EjixholeCalibratedPredictionsService
+from mh_core.integrations.ejixhole_seasonality import EjixholeSeasonalityService
 
 
 class EjixholeIntelligenceCenterService:
@@ -11,8 +12,12 @@ class EjixholeIntelligenceCenterService:
         self.predictions = EjixholeCalibratedPredictionsService(path)
         self._initialize()
 
+    @property
+    def inbox(self):
+        return self.predictions.predictions.dashboard.processor.inbox
+
     def _initialize(self) -> None:
-        with self.predictions.predictions.dashboard.processor.inbox._connect() as connection:
+        with self.inbox._connect() as connection:
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS ejixhole_recommendation_decisions (
@@ -30,9 +35,9 @@ class EjixholeIntelligenceCenterService:
 
     def build(self, business_date: date | None = None) -> dict:
         result = self.predictions.build(business_date)
-        dashboard = self.predictions.predictions.dashboard.build(
-            date.fromisoformat(result["business_date"]), days=14
-        )
+        target = date.fromisoformat(result["business_date"])
+        dashboard = self.predictions.predictions.dashboard.build(target, days=14)
+        seasonality = EjixholeSeasonalityService(self.inbox).analyze(target)
         kpis = dashboard["kpis"]
         alerts = []
         if result["predictions"]["cancellation_risk"] == "alto":
@@ -41,14 +46,15 @@ class EjixholeIntelligenceCenterService:
             alerts.append({"code": "PENDING_BALANCE", "severity": "medium", "message": f"Hay ${float(kpis['pending_balance']):,.2f} de saldo pendiente."})
         if result["predictions"]["activity_level"] == "alto":
             alerts.append({"code": "HIGH_ACTIVITY", "severity": "high", "message": "La actividad prevista es alta; prepara personal, caja e insumos."})
+        if seasonality["applied"] and seasonality["direction"] == "mayor_demanda":
+            alerts.append({"code": "SEASONAL_DEMAND_UP", "severity": "medium", "message": "El patrón histórico del día y mes apunta a una demanda superior al promedio."})
 
-        weekday = date.fromisoformat(result["business_date"]).strftime("%A").lower()
         context = {
-            "model_version": "v2",
-            "weekday": weekday,
+            "model_version": "v2.1",
+            "weekday": target.strftime("%A").lower(),
             "historical_events": dashboard["processed_events"],
             "reservation_mix": dashboard.get("breakdown", {}).get("reservations_by_type", {}),
-            "seasonality": "insufficient_data" if dashboard["processed_events"] < 30 else "enabled",
+            "seasonality": seasonality,
             "weather": {"status": "not_connected", "message": "El clima aún no modifica la predicción."},
         }
         summary = {
@@ -72,7 +78,7 @@ class EjixholeIntelligenceCenterService:
         if decision not in {"accepted", "dismissed"}:
             raise ValueError("decision inválida")
         now = datetime.now(timezone.utc).isoformat()
-        with self.predictions.predictions.dashboard.processor.inbox._connect() as connection:
+        with self.inbox._connect() as connection:
             connection.execute(
                 """
                 INSERT INTO ejixhole_recommendation_decisions (business_date, code, decision, decided_at)
@@ -87,7 +93,7 @@ class EjixholeIntelligenceCenterService:
         if outcome not in {"helped", "neutral", "not_helpful"}:
             raise ValueError("outcome inválido")
         now = datetime.now(timezone.utc).isoformat()
-        with self.predictions.predictions.dashboard.processor.inbox._connect() as connection:
+        with self.inbox._connect() as connection:
             cursor = connection.execute(
                 """
                 UPDATE ejixhole_recommendation_decisions
@@ -101,7 +107,7 @@ class EjixholeIntelligenceCenterService:
         return {"business_date": business_date, "code": code, "outcome": outcome, "note": note, "outcome_at": now}
 
     def history(self, limit: int = 50) -> dict:
-        with self.predictions.predictions.dashboard.processor.inbox._connect() as connection:
+        with self.inbox._connect() as connection:
             rows = connection.execute(
                 """
                 SELECT business_date, code, decision, decided_at, outcome, outcome_note, outcome_at
@@ -132,7 +138,7 @@ class EjixholeIntelligenceCenterService:
         }
 
     def _decisions(self, business_date: str) -> dict[str, dict]:
-        with self.predictions.predictions.dashboard.processor.inbox._connect() as connection:
+        with self.inbox._connect() as connection:
             rows = connection.execute(
                 "SELECT * FROM ejixhole_recommendation_decisions WHERE business_date=?",
                 (business_date,),
