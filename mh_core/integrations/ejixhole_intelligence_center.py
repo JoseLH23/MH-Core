@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-import json
 
 from mh_core.integrations.ejixhole_calibrated_predictions import EjixholeCalibratedPredictionsService
 
@@ -48,7 +47,7 @@ class EjixholeIntelligenceCenterService:
             "model_version": "v2",
             "weekday": weekday,
             "historical_events": dashboard["processed_events"],
-            "reservation_mix": dashboard.get("reservation_types", {}),
+            "reservation_mix": dashboard.get("breakdown", {}).get("reservations_by_type", {}),
             "seasonality": "insufficient_data" if dashboard["processed_events"] < 30 else "enabled",
             "weather": {"status": "not_connected", "message": "El clima aún no modifica la predicción."},
         }
@@ -89,7 +88,7 @@ class EjixholeIntelligenceCenterService:
             raise ValueError("outcome inválido")
         now = datetime.now(timezone.utc).isoformat()
         with self.predictions.predictions.dashboard.processor.inbox._connect() as connection:
-            connection.execute(
+            cursor = connection.execute(
                 """
                 UPDATE ejixhole_recommendation_decisions
                 SET outcome=?, outcome_note=?, outcome_at=?
@@ -97,6 +96,8 @@ class EjixholeIntelligenceCenterService:
                 """,
                 (outcome, note, now, business_date, code),
             )
+            if cursor.rowcount == 0:
+                raise ValueError("No existe una decisión registrada para esta recomendación.")
         return {"business_date": business_date, "code": code, "outcome": outcome, "note": note, "outcome_at": now}
 
     def _decisions(self, business_date: str) -> dict[str, dict]:
