@@ -100,6 +100,37 @@ class EjixholeIntelligenceCenterService:
                 raise ValueError("No existe una decisión registrada para esta recomendación.")
         return {"business_date": business_date, "code": code, "outcome": outcome, "note": note, "outcome_at": now}
 
+    def history(self, limit: int = 50) -> dict:
+        with self.predictions.predictions.dashboard.processor.inbox._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT business_date, code, decision, decided_at, outcome, outcome_note, outcome_at
+                FROM ejixhole_recommendation_decisions
+                ORDER BY decided_at DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+
+        items = [dict(row) for row in rows]
+        accepted = [item for item in items if item["decision"] == "accepted"]
+        evaluated = [item for item in accepted if item["outcome"]]
+        helped = [item for item in evaluated if item["outcome"] == "helped"]
+        pending = [item for item in accepted if not item["outcome"]]
+        helped_percent = round((len(helped) / len(evaluated)) * 100, 1) if evaluated else None
+
+        return {
+            "summary": {
+                "total_decisions": len(items),
+                "accepted": len(accepted),
+                "dismissed": len([item for item in items if item["decision"] == "dismissed"]),
+                "evaluated": len(evaluated),
+                "pending_evaluation": len(pending),
+                "helped_percent": helped_percent,
+            },
+            "items": items,
+        }
+
     def _decisions(self, business_date: str) -> dict[str, dict]:
         with self.predictions.predictions.dashboard.processor.inbox._connect() as connection:
             rows = connection.execute(

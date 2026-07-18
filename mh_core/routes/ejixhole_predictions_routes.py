@@ -33,8 +33,12 @@ def prediction_evaluation(
     as_of: date | None = Query(default=None),
     limit: int = Query(default=12, ge=1, le=52),
 ):
-    """Compara predicciones maduras contra los eventos reales observados."""
     return _service().evaluation(as_of=as_of, limit=limit)
+
+
+@router.get("/decisions", dependencies=[Depends(verificar_api_key)])
+def decision_center(limit: int = Query(default=50, ge=1, le=200)):
+    return _center().history(limit=limit)
 
 
 @router.post("/predictions/recommendations/{code}/decision", dependencies=[Depends(verificar_api_key)])
