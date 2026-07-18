@@ -3,14 +3,16 @@ from datetime import date
 from mh_core.integrations.ejixhole_intelligence_center import EjixholeIntelligenceCenterService
 
 
-def test_centro_entrega_resumen_alertas_y_contexto(tmp_path):
+def test_centro_entrega_resumen_alertas_y_contexto(tmp_path, monkeypatch):
+    monkeypatch.delenv("EJIXHOLE_LATITUDE", raising=False)
+    monkeypatch.delenv("EJIXHOLE_LONGITUDE", raising=False)
     service = EjixholeIntelligenceCenterService(tmp_path / "events.sqlite3")
 
     result = service.build(date(2026, 7, 17))
 
     assert result["daily_summary"]["notification"]["channel"] == "admin_panel"
     assert result["context_factors"]["model_version"] == "v2"
-    assert result["context_factors"]["weather"]["status"] == "not_connected"
+    assert result["context_factors"]["weather"]["status"] == "not_configured"
     assert isinstance(result["alerts"], list)
 
 

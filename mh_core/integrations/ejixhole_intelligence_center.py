@@ -5,6 +5,7 @@ from datetime import date, datetime, timezone
 
 from mh_core.integrations.ejixhole_calibrated_predictions import EjixholeCalibratedPredictionsService
 from mh_core.integrations.ejixhole_seasonality import EjixholeSeasonalityService
+from mh_core.integrations.ejixhole_weather import EjixholeWeatherService
 
 
 class EjixholeIntelligenceCenterService:
@@ -38,6 +39,7 @@ class EjixholeIntelligenceCenterService:
         target = date.fromisoformat(result["business_date"])
         dashboard = self.predictions.predictions.dashboard.build(target, days=14)
         seasonality = EjixholeSeasonalityService(self.inbox).analyze(target)
+        weather = EjixholeWeatherService(self.inbox).forecast(target)
         kpis = dashboard["kpis"]
         alerts = []
         if result["predictions"]["cancellation_risk"] == "alto":
@@ -48,6 +50,8 @@ class EjixholeIntelligenceCenterService:
             alerts.append({"code": "HIGH_ACTIVITY", "severity": "high", "message": "La actividad prevista es alta; prepara personal, caja e insumos."})
         if seasonality["applied"] and seasonality["direction"] == "mayor_demanda":
             alerts.append({"code": "SEASONAL_DEMAND_UP", "severity": "medium", "message": "El patrón histórico del día y mes apunta a una demanda superior al promedio."})
+        if weather.get("status") in {"available", "stale"} and weather.get("rain_risk_max_percent", 0) >= 70:
+            alerts.append({"code": "HIGH_RAIN_RISK", "severity": "medium", "message": "Hay una probabilidad alta de lluvia en los próximos 7 días; revisa seguridad y comunicación con visitantes."})
 
         context = {
             "model_version": "v2",
@@ -55,7 +59,7 @@ class EjixholeIntelligenceCenterService:
             "historical_events": dashboard["processed_events"],
             "reservation_mix": dashboard.get("breakdown", {}).get("reservations_by_type", {}),
             "seasonality": seasonality,
-            "weather": {"status": "not_connected", "message": "El clima aún no modifica la predicción."},
+            "weather": weather,
         }
         summary = {
             "title": "Resumen ejecutivo diario",
