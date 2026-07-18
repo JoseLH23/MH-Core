@@ -50,7 +50,7 @@ class EjixholeIntelligenceCenterService:
             alerts.append({"code": "SEASONAL_DEMAND_UP", "severity": "medium", "message": "El patrón histórico del día y mes apunta a una demanda superior al promedio."})
 
         context = {
-            "model_version": "v2.1",
+            "model_version": "v2",
             "weekday": target.strftime("%A").lower(),
             "historical_events": dashboard["processed_events"],
             "reservation_mix": dashboard.get("breakdown", {}).get("reservations_by_type", {}),
