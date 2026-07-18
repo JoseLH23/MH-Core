@@ -1,13 +1,12 @@
-"""Procesa una sola vez los eventos recibidos de EjiXhole y construye estado operativo."""
+"""Procesa eventos recibidos de EjiXhole y construye estado operativo."""
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 import json
-import sqlite3
 
-from mh_core.integrations.ejixhole_events import SqliteEjixholeEventInbox
+from mh_core.integrations.ejixhole_state_store import ConfiguredEjixholeEventInbox
 
 
 @dataclass(frozen=True)
@@ -19,7 +18,7 @@ class ProcessResult:
 
 class EjixholeEventProcessor:
     def __init__(self, path: str | Path | None = None) -> None:
-        self.inbox = SqliteEjixholeEventInbox(path)
+        self.inbox = ConfiguredEjixholeEventInbox(path)
         self._initialize()
 
     def _initialize(self) -> None:
@@ -52,6 +51,12 @@ class EjixholeEventProcessor:
             )
 
     def process_pending(self, limit: int = 100) -> ProcessResult:
+        if self.inbox.backend == "postgresql":
+            from mh_core.integrations.ejixhole_configured_processor import ConfiguredEjixholeEventProcessor
+
+            processor = ConfiguredEjixholeEventProcessor(database_url=None)
+            return processor._process_postgres(limit)
+
         connection = self.inbox._connect()
         scanned = processed = skipped = 0
         try:
@@ -91,7 +96,7 @@ class EjixholeEventProcessor:
             connection.close()
 
     @staticmethod
-    def _apply(connection: sqlite3.Connection, event_type: str, payload: dict) -> None:
+    def _apply(connection, event_type: str, payload: dict) -> None:
         reservation_id = str(payload["reservation_id"])
         now = datetime.now(timezone.utc).isoformat()
         current = connection.execute(
