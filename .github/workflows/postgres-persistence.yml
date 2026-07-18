@@ -28,7 +28,7 @@ jobs:
     env:
       PYTHONPATH: .
       MH_TEST_POSTGRES_URL: postgresql+psycopg://mh_core@localhost:5432/mh_core_test
-      MH_TEST_EJIXHOLE_POSTGRES_URL: postgresql+psycopg://mh_core@localhost:5432/mh_core_test
+      MH_TEST_EJIXHOLE_POSTGRES_URL: postgresql://mh_core@localhost:5432/mh_core_test
     steps:
       - name: Descargar repositorio
         uses: actions/checkout@v7
