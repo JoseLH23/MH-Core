@@ -1,5 +1,5 @@
 import os
-from datetime import date
+from datetime import date, datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -7,6 +7,7 @@ from mh_core.core.auth import verificar_api_key
 from mh_core.integrations.ejixhole_calibrated_predictions import EjixholeCalibratedPredictionsService
 from mh_core.integrations.ejixhole_intelligence_center import EjixholeIntelligenceCenterService
 from mh_core.integrations.ejixhole_predictions import EjixholePredictionsService
+from mh_core.integrations.ejixhole_profitability import EjixholeProfitabilityService
 
 router = APIRouter(prefix="/integrations/ejixhole", tags=["Integraciones"])
 
@@ -39,6 +40,16 @@ def prediction_evaluation(
 @router.get("/decisions", dependencies=[Depends(verificar_api_key)])
 def decision_center(limit: int = Query(default=50, ge=1, le=200)):
     return _center().history(limit=limit)
+
+
+@router.get("/profitability", dependencies=[Depends(verificar_api_key)])
+def service_profitability(
+    business_date: date | None = Query(default=None),
+    days: int = Query(default=30, ge=1, le=365),
+):
+    center = _center()
+    target = business_date or datetime.now(timezone.utc).date()
+    return EjixholeProfitabilityService(center.inbox).build(target, days=days)
 
 
 @router.post("/predictions/recommendations/{code}/decision", dependencies=[Depends(verificar_api_key)])
