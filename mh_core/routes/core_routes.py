@@ -1,23 +1,23 @@
 from fastapi import APIRouter
+
+from mh_core.routes.observability_routes import router as observability_router
 from mh_core.services.health_service import get_health_status
 
 router = APIRouter()
+router.include_router(observability_router)
 
-# NOTA (BA-01, auditoría de seguridad 13/jul/2026): antes había un "/"
-# aquí también, duplicado con el de mh_core/app.py — competían por el
-# mismo path y, dependiendo del orden de registro, uno podía ganar
-# silenciosamente sobre el otro (pasó de verdad al proteger core_router
-# con X-API-Key: este "/" protegido empezó a tapar el público). Se
-# quita — el único "/" real vive en app.py, sin auth, como liveness check.
+# El único "/" público vive en app.py. Este router se registra con API key.
+
 
 @router.get("/health")
 def health():
     return get_health_status()
+
 
 @router.get("/info")
 def info():
     return {
         "name": "MH Core",
         "version": "1.0.0",
-        "description": "Core API for the MindHigh ecosystem"
+        "description": "Core API for the MindHigh ecosystem",
     }
