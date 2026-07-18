@@ -6,12 +6,12 @@ from decimal import Decimal
 from pathlib import Path
 import json
 
-from mh_core.integrations.ejixhole_event_processor import EjixholeEventProcessor
+from mh_core.integrations.ejixhole_configured_processor import ConfiguredEjixholeEventProcessor
 
 
 class EjixholeDailySummaryService:
     def __init__(self, path: str | Path | None = None) -> None:
-        self.processor = EjixholeEventProcessor(path)
+        self.processor = ConfiguredEjixholeEventProcessor(path)
 
     @staticmethod
     def _decimal(value: str | None) -> Decimal:
@@ -53,9 +53,9 @@ class EjixholeDailySummaryService:
         active = 0
         by_status: dict[str, int] = {}
         for row in reservation_rows:
-            status = row["status"]
-            by_status[status] = by_status.get(status, 0) + 1
-            if status not in {"completada", "cancelada"}:
+            reservation_status = row["status"]
+            by_status[reservation_status] = by_status.get(reservation_status, 0) + 1
+            if reservation_status not in {"completada", "cancelada"}:
                 active += 1
                 if row["pending_balance"] is not None:
                     pending += self._decimal(row["pending_balance"])
