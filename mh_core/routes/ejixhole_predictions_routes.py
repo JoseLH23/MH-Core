@@ -1,10 +1,11 @@
 import os
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from mh_core.core.auth import verificar_api_key
 from mh_core.integrations.ejixhole_calibrated_predictions import EjixholeCalibratedPredictionsService
+from mh_core.integrations.ejixhole_intelligence_center import EjixholeIntelligenceCenterService
 from mh_core.integrations.ejixhole_predictions import EjixholePredictionsService
 
 router = APIRouter(prefix="/integrations/ejixhole", tags=["Integraciones"])
@@ -18,9 +19,13 @@ def _calibrated_service() -> EjixholeCalibratedPredictionsService:
     return EjixholeCalibratedPredictionsService(os.getenv("EJIXHOLE_EVENT_INBOX_PATH"))
 
 
+def _center() -> EjixholeIntelligenceCenterService:
+    return EjixholeIntelligenceCenterService(os.getenv("EJIXHOLE_EVENT_INBOX_PATH"))
+
+
 @router.get("/predictions", dependencies=[Depends(verificar_api_key)])
 def predictions(business_date: date | None = Query(default=None)):
-    return _calibrated_service().build(business_date)
+    return _center().build(business_date)
 
 
 @router.get("/predictions/evaluation", dependencies=[Depends(verificar_api_key)])
@@ -30,3 +35,28 @@ def prediction_evaluation(
 ):
     """Compara predicciones maduras contra los eventos reales observados."""
     return _service().evaluation(as_of=as_of, limit=limit)
+
+
+@router.post("/predictions/recommendations/{code}/decision", dependencies=[Depends(verificar_api_key)])
+def recommendation_decision(
+    code: str,
+    business_date: str = Query(...),
+    decision: str = Query(...),
+):
+    try:
+        return _center().decide(business_date, code, decision)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post("/predictions/recommendations/{code}/outcome", dependencies=[Depends(verificar_api_key)])
+def recommendation_outcome(
+    code: str,
+    business_date: str = Query(...),
+    outcome: str = Query(...),
+    note: str | None = Query(default=None, max_length=500),
+):
+    try:
+        return _center().record_outcome(business_date, code, outcome, note)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
