@@ -1,0 +1,42 @@
+name: Persistence - PostgreSQL
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-persistence:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: mh_core
+          POSTGRES_DB: mh_core_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mh_core -d mh_core_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PYTHONPATH: .
+      MH_TEST_POSTGRES_URL: postgresql+psycopg://mh_core@localhost:5432/mh_core_test
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v7
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Probar cola y memoria en PostgreSQL
+        run: pytest -q tests/test_postgres_persistence.py tests/test_durable_jobs.py tests/test_sql_memory_repository.py

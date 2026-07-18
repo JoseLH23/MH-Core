@@ -1,18 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, ConfigDict, Field
 
 from mh_core.engines.automation_engine import AutomationEngine
+from mh_core.jobs.durable_queue import DurableJobQueue
 from mh_core.utils.logger import logger
 from mh_core.utils.rate_limit_dependency import limitar_generacion_ia
 
 router = APIRouter(prefix="/automation", tags=["Automation"])
-
-# Instancia única a nivel de proceso — así start/stop/status hablan
-# del mismo motor entre requests distintos (igual que un scheduler real).
 _motor = AutomationEngine()
 
 
+class AutomationJobRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    idempotency_key: str | None = Field(default=None, min_length=3, max_length=180)
+    priority: int = Field(default=0, ge=-100, le=100)
+    max_attempts: int = Field(default=5, ge=1, le=20)
+
+
 @router.get("/status")
-def status():
+def automation_status():
     return _motor.status()
 
 
@@ -20,28 +26,38 @@ def status():
 def run_once():
     try:
         resultado = _motor.run_once(remember=True)
-    except Exception as e:
-        # AL-07 (auditoría de seguridad): antes se devolvía str(e) tal
-        # cual al cliente — podía revelar rutas locales, nombres de
-        # proveedor, config interna. El detalle real solo va al log.
-        logger.warning(f"automation/run: falló la ejecución ({e}).")
-        raise HTTPException(status_code=502, detail="Falló la ejecución automática. Revisa el log del servidor.")
+    except Exception as exc:
+        logger.warning("automation/run falló: %s", type(exc).__name__)
+        raise HTTPException(
+            status_code=502,
+            detail="Falló la ejecución automática. Revisa el log del servidor.",
+        ) from exc
     return {"status": "success", "brain_report": resultado.get("brain_report")}
 
 
+@router.post("/enqueue", status_code=status.HTTP_202_ACCEPTED)
+def enqueue(data: AutomationJobRequest):
+    result = DurableJobQueue().enqueue(
+        "automation.run_once",
+        {},
+        idempotency_key=data.idempotency_key,
+        priority=data.priority,
+        max_attempts=data.max_attempts,
+    )
+    return {
+        "job_id": result.job.id,
+        "status": result.job.status,
+        "duplicate": result.duplicate,
+    }
+
+
 @router.post("/start")
-def start(
-    # CR-05 (auditoría de seguridad): antes aceptaba cualquier entero,
-    # incluido 0 o negativo — un intervalo así corre el pipeline casi
-    # sin pausa, agotando cuota gratis de Gemini/Groq/YouTube en
-    # minutos. Rango real: entre 1 minuto y 24 horas.
-    interval_seconds: int = Query(3600, ge=60, le=86400),
-):
+def start(interval_seconds: int = Query(3600, ge=60, le=86400)):
     if _motor.esta_activo():
-        # CR-05 / AL-12 (parcial): evita que "start" duplique el
-        # scheduler si ya hay uno corriendo — un segundo scheduler
-        # sobre el mismo proceso duplicaría ejecuciones y gasto real.
-        return {"detail": "Automation ya está activo — no se inició un segundo scheduler.", **_motor.status()}
+        return {
+            "detail": "Automation ya está activo — no se inició un segundo scheduler.",
+            **_motor.status(),
+        }
     _motor.start(interval_seconds=interval_seconds)
     return _motor.status()
 
