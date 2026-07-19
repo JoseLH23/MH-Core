@@ -25,7 +25,7 @@ def _service_table() -> dict[str, tuple[str, frozenset[str]]]:
         ),
         "operations": (
             os.environ.get("MH_CORE_OPERATIONS_KEY", ""),
-            frozenset({"core.read", "core.admin", "mindhigh.execute", "ejixhole.execute"}),
+            frozenset({"core.read", "core.admin", "mindhigh.execute", "ejixhole.read", "ejixhole.execute"}),
         ),
     }
     return {name: value for name, value in definitions.items() if value[0]}
@@ -40,11 +40,17 @@ def _unauthorized(message: str = "Credencial de servicio inválida o faltante.")
     return HTTPException(status_code=401, detail=message)
 
 
+def _text_header(value) -> str | None:
+    return value if isinstance(value, str) and value else None
+
+
 def verificar_api_key(
     request: Request = None,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
     x_service_id: str | None = Header(default=None, alias="X-Service-ID"),
 ) -> ServiceIdentity:
+    x_api_key = _text_header(x_api_key)
+    x_service_id = _text_header(x_service_id)
     services = _service_table()
     if x_service_id:
         if x_service_id in _revoked():
