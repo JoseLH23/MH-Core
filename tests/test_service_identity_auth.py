@@ -25,7 +25,7 @@ def clean_identity_env(monkeypatch):
 def test_legacy_key_remains_available_without_service_registry(monkeypatch):
     monkeypatch.setenv("MH_CORE_API_KEY", "legacy-value-for-transition")
 
-    identity = verificar_api_key(request=None, x_api_key="legacy-value-for-transition", x_service_id=None)
+    identity = verificar_api_key(x_api_key="legacy-value-for-transition")
 
     assert identity.name == "legacy"
     assert identity.legacy is True
@@ -48,7 +48,7 @@ def test_configured_registry_disables_legacy_by_default(monkeypatch):
     monkeypatch.setenv("MH_CORE_API_KEY", "legacy-value-for-transition")
 
     with pytest.raises(HTTPException) as error:
-        verificar_api_key(request=None, x_api_key="legacy-value-for-transition", x_service_id=None)
+        verificar_api_key(x_api_key="legacy-value-for-transition")
 
     assert error.value.status_code == 401
 
@@ -74,6 +74,14 @@ def test_scope_dependency_rejects_missing_permission():
     assert error.value.status_code == 403
 
 
+def test_operations_identity_can_execute_ejixhole(monkeypatch):
+    value = "o" * 48
+    monkeypatch.setenv("MH_CORE_OPERATIONS_KEY", value)
+    identity = verificar_api_key(request=None, x_api_key=value, x_service_id="operations")
+
+    assert requerir_scopes("ejixhole.execute")(identity) == identity
+
+
 def test_status_accepts_named_service(monkeypatch):
     value = "m" * 48
     monkeypatch.setenv("MH_CORE_MINDHIGH_KEY", value)
@@ -89,10 +97,10 @@ def test_status_accepts_named_service(monkeypatch):
 def test_mindhigh_service_cannot_read_ejixhole_analytics(monkeypatch):
     value = "m" * 48
     monkeypatch.setenv("MH_CORE_MINDHIGH_KEY", value)
+    headers = {"X-Service-ID": "mindhigh-worker", "X-API-Key": value}
 
-    response = TestClient(app).get(
-        "/integrations/ejixhole/operations/summary",
-        headers={"X-Service-ID": "mindhigh-worker", "X-API-Key": value},
-    )
+    operations = TestClient(app).get("/integrations/ejixhole/operations/summary", headers=headers)
+    events = TestClient(app).get("/integrations/ejixhole/events/status", headers=headers)
 
-    assert response.status_code == 403
+    assert operations.status_code == 403
+    assert events.status_code == 403
