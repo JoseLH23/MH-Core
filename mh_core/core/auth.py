@@ -32,7 +32,8 @@ def _service_table() -> dict[str, tuple[str, frozenset[str]]]:
 
 
 def _revoked() -> set[str]:
-    return {item.strip() for item in os.environ.get("MH_CORE_REVOKED_SERVICES", "").split(",") if item.strip()}
+    raw = os.environ.get("MH_CORE_REVOKED_SERVICES", "")
+    return {item.strip() for item in raw.split(",") if item.strip()}
 
 
 def _unauthorized(message: str = "Credencial de servicio inválida o faltante.") -> HTTPException:
@@ -40,7 +41,7 @@ def _unauthorized(message: str = "Credencial de servicio inválida o faltante.")
 
 
 def verificar_api_key(
-    request: Request | None = None,
+    request: Request = None,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
     x_service_id: str | None = Header(default=None, alias="X-Service-ID"),
 ) -> ServiceIdentity:
@@ -60,7 +61,11 @@ def verificar_api_key(
         return identity
 
     legacy = os.environ.get("MH_CORE_API_KEY", "")
-    allow_legacy = not services or os.environ.get("MH_CORE_ALLOW_LEGACY_API_KEY", "").lower() in {"1", "true", "yes"}
+    allow_legacy = not services or os.environ.get("MH_CORE_ALLOW_LEGACY_API_KEY", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
     if allow_legacy and legacy:
         if x_api_key and hmac.compare_digest(x_api_key, legacy):
             identity = ServiceIdentity(name="legacy", scopes=frozenset({"*"}), legacy=True)
