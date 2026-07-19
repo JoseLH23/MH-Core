@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from pydantic import ValidationError
 
-from mh_core.core.auth import verificar_api_key
+from mh_core.core.auth import requerir_scopes
 from mh_core.integrations.ejixhole_event_status import (
     EjixholeEventInboxInspector,
     EjixholeInboxEventStatus,
@@ -27,12 +27,13 @@ from mh_core.integrations.ejixhole_events import (
 
 
 router = APIRouter(prefix="/integrations/ejixhole", tags=["Integraciones"])
+_event_read = [Depends(requerir_scopes("ejixhole.read"))]
 
 
 @router.get(
     "/events/status",
     response_model=EjixholeInboxStatus,
-    dependencies=[Depends(verificar_api_key)],
+    dependencies=_event_read,
 )
 def event_channel_status():
     """Muestra salud y conteos sin exponer payloads ni la ruta del volumen."""
@@ -44,7 +45,7 @@ def event_channel_status():
 @router.get(
     "/events/{event_id}",
     response_model=EjixholeInboxEventStatus,
-    dependencies=[Depends(verificar_api_key)],
+    dependencies=_event_read,
 )
 def received_event_status(event_id: UUID):
     """Confirma que un UUID existe una sola vez en la bandeja de entrada."""
