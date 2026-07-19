@@ -42,7 +42,7 @@ app.include_router(ejixhole_router, dependencies=_ejixhole_read)
 app.include_router(ejixhole_operations_router, dependencies=_ejixhole_read)
 app.include_router(ejixhole_daily_router, dependencies=_ejixhole_read)
 app.include_router(ejixhole_executive_router, dependencies=_ejixhole_read)
-app.include_router(ejixhole_predictions_router, dependencies=_ejixhole_read)
+app.include_router(ejixhole_predictions_router)
 
 
 @app.get("/")
