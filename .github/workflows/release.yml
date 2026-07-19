@@ -1,0 +1,57 @@
+name: Release - MH-Core
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: mh_core
+          POSTGRES_DB: mh_core_release
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mh_core -d mh_core_release"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PYTHONPATH: .
+      MH_TEST_POSTGRES_URL: postgresql+psycopg://mh_core@localhost:5432/mh_core_release
+      MH_TEST_EJIXHOLE_POSTGRES_URL: postgresql+psycopg://mh_core@localhost:5432/mh_core_release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python scripts/validate_release.py
+      - run: pytest -q
+      - run: python -c "import mh_core.app; print('import correcto')"
+      - name: Generar evidencia
+        run: |
+          mkdir -p release-evidence
+          python scripts/validate_release.py --evidence release-evidence/mh-core.json
+          sha256sum release-evidence/mh-core.json > release-evidence/SHA256SUMS
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mh-core-release-evidence-${{ github.ref_name }}
+          path: release-evidence/
+          retention-days: 90
+      - name: Crear GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" release-evidence/* --verify-tag --generate-notes --title "MH-Core ${GITHUB_REF_NAME}"
