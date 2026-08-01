@@ -89,7 +89,7 @@ def test_search_falla_cerrado_sin_bundle(monkeypatch):
     )
 
     assert response.status_code == 503
-    assert response.json()["detail"] == "MH_KNOWLEDGE_BUNDLE_PATH no está configurada."
+    assert response.json()["detail"] == "El conocimiento aprobado no está disponible."
 
 
 def test_mindhigh_consulta_contexto_citable(tmp_path, monkeypatch):
