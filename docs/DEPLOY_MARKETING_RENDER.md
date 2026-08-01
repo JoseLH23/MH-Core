@@ -54,20 +54,36 @@ El backend también necesita:
 
 ```text
 MH_CORE_URL=https://DOMINIO-REAL-DEL-SERVICIO
+MH_CORE_TIMEOUT_SECONDS=75
 ```
+
+El tiempo mayor permite que el primer intento despierte una instancia gratuita.
+No implica reintentos automáticos ni oculta una indisponibilidad real.
 
 ## Creación mediante Blueprint
 
 1. Crear un Blueprint desde este repositorio privado.
 2. Render detecta `render.yaml`.
-3. Confirmar el servicio `mh-core-marketing`.
+3. Confirmar el servicio `mh-core-marketing` y el plan `Free`.
 4. Registrar `MH_CORE_EJIXHOLE_KEY` cuando Render la solicite.
 5. Agregar el Secret File `approved-bundle.json`.
 6. Desplegar.
 
-El comando de arranque usa un solo worker. La versión inicial no necesita
-PostgreSQL, Gemini, Groq, YouTube ni un worker de trabajos, porque la generación
-de borradores es determinista y no conserva estado.
+El despliegue automático espera a que los checks de GitHub pasen. El comando de
+arranque usa un solo worker. La versión inicial no necesita PostgreSQL, Gemini,
+Groq, YouTube ni un worker de trabajos, porque la generación de borradores es
+determinista y no conserva estado.
+
+## Límite del piloto gratuito
+
+Una instancia gratuita puede dormirse tras un periodo sin tráfico. La primera
+consulta posterior puede tardar aproximadamente un minuto mientras el servicio
+despierta. Esto es aceptable para el piloto interno, no para una operación con
+respuesta inmediata garantizada.
+
+Cuando Marketing tenga uso frecuente o sea crítico, cambiar únicamente el plan
+de la instancia a uno siempre activo. No se requiere cambiar el código ni el
+contrato de seguridad.
 
 ## Verificación
 
