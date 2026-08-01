@@ -42,12 +42,30 @@ GET /knowledge/search?q=camping&category=sales&limit=3
 
 La búsqueda devuelve la versión del conocimiento, el comportamiento para hechos desconocidos y los documentos coincidentes con sus citas. Cuando el bundle no está configurado o es inválido, la búsqueda responde `503` sin exponer detalles internos.
 
+## Campañas gobernadas de MindHigh
+
+MindHigh puede crear un borrador determinista mediante:
+
+```text
+POST /mindhigh/marketing/campaigns/draft
+```
+
+La respuesta siempre incluye:
+
+- versión del conocimiento;
+- IDs de los documentos esenciales;
+- una cita de MH-Knowledge por documento;
+- `requires_human_approval: true`;
+- los textos adaptados a cada canal.
+
+La ruta no publica contenido. También rechaza precios, promociones, horarios o disponibilidad declarados manualmente como si fueran hechos aprobados. Esos datos se integrarán posteriormente desde una fuente operacional autorizada.
+
 ## Contrato de despliegue
 
 1. `MH-Knowledge` valida aprobación, vigencia, fuentes y checksums.
 2. Su workflow genera `governance-output/approved-bundle.json`.
 3. El bundle se entrega al entorno de MH-Core como archivo de configuración privado.
 4. MH-Core lo valida nuevamente antes de usarlo.
-5. MindHigh consulta la API con su identidad de servicio y conserva los `citation_id`.
+5. MindHigh genera borradores con evidencia citable y aprobación humana obligatoria.
 
 No se requiere que MH-Core tenga acceso de lectura al repositorio completo ni que almacene credenciales de GitHub en el código.

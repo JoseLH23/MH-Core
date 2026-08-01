@@ -7,6 +7,7 @@ disponibilidad, horarios ni promociones. Prepara borradores para aprobación hum
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from apps.mindhigh.models.marketing_campaign import (
     CampaignBrief,
@@ -15,13 +16,20 @@ from apps.mindhigh.models.marketing_campaign import (
     MarketingChannel,
 )
 from mh_core.knowledge.ejixhole_knowledge import EjixholeKnowledgeSnapshot
+from mh_core.knowledge.governed_bundle import GovernedKnowledgeBundle
 
 
 class UnsafeMarketingClaimError(ValueError):
     """El contenido contiene un dato comercial dinámico no aprobado."""
 
 
+class MissingMarketingEvidenceError(RuntimeError):
+    """La campaña no puede demostrar qué conocimiento aprobado utilizó."""
+
+
 class MarketingCampaignService:
+    REQUIRED_DOCUMENT_IDS = ("brand", "marketing_strategy", "offer", "agent_rules")
+
     DYNAMIC_CLAIM_PATTERN = re.compile(
         r"(?:\$\s?\d|\b\d+(?:[.,]\d+)?\s?%|\b(?:precio|descuento|promoci[oó]n|"
         r"disponibilidad|disponible|horario|costo)\b)",
@@ -35,14 +43,39 @@ class MarketingCampaignService:
         "experiencia_general": "haz una pausa de la rutina y comparte una experiencia en la naturaleza",
     }
 
-    def __init__(self, knowledge: EjixholeKnowledgeSnapshot) -> None:
+    def __init__(
+        self,
+        knowledge: EjixholeKnowledgeSnapshot | GovernedKnowledgeBundle,
+        *,
+        require_citations: bool = False,
+    ) -> None:
         self.knowledge = knowledge
+        self.require_citations = require_citations
+
+    def _required_documents(self) -> tuple[Any, ...]:
+        documents: list[Any] = []
+        for document_id in self.REQUIRED_DOCUMENT_IDS:
+            if isinstance(self.knowledge, GovernedKnowledgeBundle):
+                document = self.knowledge.get(document_id)
+                if document is None:
+                    raise KeyError(document_id)
+            else:
+                document = self.knowledge.by_id(document_id)
+            documents.append(document)
+        return tuple(documents)
 
     def generate(self, brief: CampaignBrief) -> MarketingCampaign:
-        self.knowledge.by_id("brand")
-        self.knowledge.by_id("marketing_strategy")
-        self.knowledge.by_id("offer")
-        self.knowledge.by_id("agent_rules")
+        evidence = self._required_documents()
+        citations = tuple(
+            citation
+            for document in evidence
+            if isinstance((citation := getattr(document, "citation_id", None)), str)
+            and citation
+        )
+        if self.require_citations and len(citations) != len(evidence):
+            raise MissingMarketingEvidenceError(
+                "La campaña requiere una cita válida por cada documento esencial."
+            )
 
         contents = tuple(self._content_for(channel, brief) for channel in brief.channels)
         self._validate_dynamic_claims(contents, brief.approved_dynamic_facts)
@@ -55,6 +88,8 @@ class MarketingCampaignService:
             offer_focus=brief.offer_focus,
             season=brief.season,
             knowledge_version=self.knowledge.knowledge_version,
+            knowledge_document_ids=self.REQUIRED_DOCUMENT_IDS,
+            knowledge_citations=citations,
             requires_human_approval=True,
             dynamic_facts_used=tuple(brief.approved_dynamic_facts),
             contents=contents,
