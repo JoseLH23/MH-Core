@@ -20,7 +20,6 @@ def _service_table() -> dict[str, tuple[str, frozenset[str]]]:
             frozenset(
                 {
                     "core.read",
-                    "knowledge.read",
                     "mindhigh.campaigns",
                     "ejixhole.read",
                     "ejixhole.execute",
