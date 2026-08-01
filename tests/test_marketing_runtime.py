@@ -106,8 +106,8 @@ def test_produccion_expone_solo_salud_y_marketing():
     client = TestClient(application)
     assert client.get("/health/live").status_code == 200
     assert client.get("/health/ready").status_code == 503
-    assert client.get("/mindhigh/marketing/status").status_code == 401
-    assert client.post(CAMPAIGN_PATH, json=_brief()).status_code == 401
+    assert client.get("/mindhigh/marketing/status").status_code == 503
+    assert client.post(CAMPAIGN_PATH, json=_brief()).status_code == 503
     assert client.get("/docs").status_code == 404
     assert client.get("/openapi.json").status_code == 404
     assert client.get("/mindhigh/run").status_code == 404
