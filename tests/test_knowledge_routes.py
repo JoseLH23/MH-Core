@@ -141,7 +141,7 @@ def test_bundle_corrupto_devuelve_indisponibilidad_segura(tmp_path, monkeypatch)
     assert response.json()["detail"] == "El conocimiento aprobado no está disponible."
 
 
-def test_ejixhole_backend_no_recibe_scope_de_conocimiento(tmp_path, monkeypatch):
+def test_ejixhole_backend_recibe_conocimiento_de_solo_lectura(tmp_path, monkeypatch):
     bundle_path = tmp_path / "approved-bundle.json"
     _write_bundle(bundle_path)
     monkeypatch.setenv("MH_KNOWLEDGE_BUNDLE_PATH", str(bundle_path))
@@ -153,7 +153,8 @@ def test_ejixhole_backend_no_recibe_scope_de_conocimiento(tmp_path, monkeypatch)
         headers=_headers("ejixhole-backend", "ejixhole-test-key"),
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 200
+    assert response.json()["documents"][0]["citation_id"] == "mhk://ejixhole/faq/2026.07.3"
 
 
 def test_api_requiere_identidad(monkeypatch):
