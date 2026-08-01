@@ -11,6 +11,7 @@ from mh_core.routes.knowledge_routes import router as knowledge_router
 from mh_core.routes.automation_routes import router as automation_router
 from mh_core.routes.agent_routes import router as agent_router
 from apps.mindhigh.routes.mindhigh_routes import router as mindhigh_router
+from apps.mindhigh.routes.marketing_routes import router as mindhigh_marketing_router
 from apps.mindhigh.routes.orchestrator_routes import router as mindhigh_orchestrator_router
 from apps.mindhigh.routes.video_routes import router as video_router
 from apps.mindhigh.routes.mindhigh_agent_routes import router as mindhigh_agent_router
@@ -37,6 +38,7 @@ app.include_router(knowledge_router, dependencies=_knowledge_read)
 app.include_router(automation_router, dependencies=_mindhigh_execute)
 app.include_router(agent_router, dependencies=_mindhigh_execute)
 app.include_router(mindhigh_router, dependencies=_mindhigh_execute)
+app.include_router(mindhigh_marketing_router, dependencies=_mindhigh_execute)
 app.include_router(mindhigh_orchestrator_router, dependencies=_mindhigh_execute)
 app.include_router(video_router, dependencies=_mindhigh_execute)
 app.include_router(mindhigh_agent_router, dependencies=_mindhigh_execute)
