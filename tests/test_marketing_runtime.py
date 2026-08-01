@@ -93,8 +93,11 @@ def clean_runtime(monkeypatch):
 
 def test_produccion_expone_solo_salud_y_marketing():
     application = create_marketing_app("production")
+    exposed_paths = {
+        route.path for route in application.routes if hasattr(route, "path")
+    }
 
-    assert {route.path for route in application.routes} == {
+    assert exposed_paths == {
         "/health/live",
         "/health/ready",
         "/mindhigh/marketing/status",
