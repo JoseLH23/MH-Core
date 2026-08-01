@@ -11,6 +11,7 @@ from mh_core.marketing_app import create_marketing_app
 
 
 SERVICE_KEY = "e" * 48
+CAMPAIGN_PATH = "/mindhigh/marketing/campaigns/draft"
 
 
 def _headers() -> dict[str, str]:
@@ -97,7 +98,7 @@ def test_produccion_expone_solo_salud_y_marketing():
         "/health/live",
         "/health/ready",
         "/mindhigh/marketing/status",
-        "/mindhigh/marketing/campaigns/draft",
+        CAMPAIGN_PATH,
     }
     client = TestClient(application)
     assert client.get("/docs").status_code == 404
@@ -136,6 +137,29 @@ def test_readiness_rechaza_credencial_debil(tmp_path, monkeypatch):
     assert response.status_code == 503
 
 
+def test_rechaza_cuerpo_de_campana_mayor_a_64_kib():
+    client = TestClient(create_marketing_app("production"))
+
+    response = client.post(
+        CAMPAIGN_PATH,
+        content=b"{}",
+        headers={"Content-Length": str(64 * 1024 + 1)},
+    )
+
+    assert response.status_code == 413
+    assert response.json()["detail"] == "Solicitud demasiado grande."
+
+
+def test_limita_bucle_de_generacion_por_identidad_y_origen():
+    client = TestClient(create_marketing_app("production"))
+
+    responses = [client.post(CAMPAIGN_PATH, json={}) for _ in range(31)]
+
+    assert all(response.status_code != 429 for response in responses[:30])
+    assert responses[30].status_code == 429
+    assert int(responses[30].headers["retry-after"]) >= 1
+
+
 def test_runtime_listo_genera_campana_citable(tmp_path, monkeypatch):
     bundle = tmp_path / "approved-bundle.json"
     _write_bundle(bundle)
@@ -148,7 +172,7 @@ def test_runtime_listo_genera_campana_citable(tmp_path, monkeypatch):
     unauthorized = client.get("/mindhigh/marketing/status")
     status = client.get("/mindhigh/marketing/status", headers=_headers())
     campaign = client.post(
-        "/mindhigh/marketing/campaigns/draft",
+        CAMPAIGN_PATH,
         json=_brief(),
         headers=_headers(),
     )
