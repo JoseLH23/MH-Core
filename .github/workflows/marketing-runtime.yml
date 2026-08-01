@@ -1,0 +1,67 @@
+name: Runtime - Marketing mínimo
+
+on:
+  pull_request:
+    paths:
+      - "apps/mindhigh/models/marketing_campaign.py"
+      - "apps/mindhigh/routes/marketing_routes.py"
+      - "apps/mindhigh/services/marketing_campaign_service.py"
+      - "mh_core/core/auth.py"
+      - "mh_core/core/rate_limiter.py"
+      - "mh_core/knowledge/governed_bundle.py"
+      - "mh_core/services/governed_knowledge_service.py"
+      - "mh_core/marketing_app.py"
+      - "requirements-marketing.txt"
+      - "render.yaml"
+      - "tests/test_marketing_runtime.py"
+      - "tests/test_marketing_render_contract.py"
+      - ".github/workflows/marketing-runtime.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/mindhigh/models/marketing_campaign.py"
+      - "apps/mindhigh/routes/marketing_routes.py"
+      - "apps/mindhigh/services/marketing_campaign_service.py"
+      - "mh_core/core/auth.py"
+      - "mh_core/core/rate_limiter.py"
+      - "mh_core/knowledge/governed_bundle.py"
+      - "mh_core/services/governed_knowledge_service.py"
+      - "mh_core/marketing_app.py"
+      - "requirements-marketing.txt"
+      - "render.yaml"
+      - "tests/test_marketing_runtime.py"
+      - "tests/test_marketing_render_contract.py"
+      - ".github/workflows/marketing-runtime.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: marketing-runtime-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  minimal-runtime:
+    name: Probar instalación mínima
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONPATH: .
+      MH_ENVIRONMENT: production
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-marketing.txt
+      - name: Instalar solo runtime y herramientas de prueba
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-marketing.txt pytest==9.0.3 httpx==0.28.1
+          pip check
+      - name: Comprobar importación productiva
+        run: python -c "from mh_core.marketing_app import app; assert app.docs_url is None"
+      - name: Probar superficie, seguridad y Blueprint
+        run: pytest -q tests/test_marketing_runtime.py tests/test_marketing_render_contract.py
