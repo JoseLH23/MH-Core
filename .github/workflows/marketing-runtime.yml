@@ -3,14 +3,15 @@ name: Runtime - Marketing mínimo
 on:
   pull_request:
     paths:
+      - "apps/mindhigh/marketing_app.py"
       - "apps/mindhigh/models/marketing_campaign.py"
       - "apps/mindhigh/routes/marketing_routes.py"
       - "apps/mindhigh/services/marketing_campaign_service.py"
+      - "mh_core/app.py"
       - "mh_core/core/auth.py"
       - "mh_core/core/rate_limiter.py"
       - "mh_core/knowledge/governed_bundle.py"
       - "mh_core/services/governed_knowledge_service.py"
-      - "mh_core/marketing_app.py"
       - "requirements-marketing.txt"
       - "render.yaml"
       - "tests/test_marketing_runtime.py"
@@ -19,14 +20,15 @@ on:
   push:
     branches: [main]
     paths:
+      - "apps/mindhigh/marketing_app.py"
       - "apps/mindhigh/models/marketing_campaign.py"
       - "apps/mindhigh/routes/marketing_routes.py"
       - "apps/mindhigh/services/marketing_campaign_service.py"
+      - "mh_core/app.py"
       - "mh_core/core/auth.py"
       - "mh_core/core/rate_limiter.py"
       - "mh_core/knowledge/governed_bundle.py"
       - "mh_core/services/governed_knowledge_service.py"
-      - "mh_core/marketing_app.py"
       - "requirements-marketing.txt"
       - "render.yaml"
       - "tests/test_marketing_runtime.py"
@@ -62,6 +64,6 @@ jobs:
           pip install -r requirements-marketing.txt pytest==9.0.3 httpx==0.28.1
           pip check
       - name: Comprobar importación productiva
-        run: python -c "from mh_core.marketing_app import app; assert app.docs_url is None"
+        run: python -c "from apps.mindhigh.marketing_app import app; assert app.docs_url is None"
       - name: Probar superficie, seguridad y Blueprint
         run: pytest -q tests/test_marketing_runtime.py tests/test_marketing_render_contract.py
