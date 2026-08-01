@@ -1,17 +1,19 @@
 from __future__ import annotations
 
+import asyncio
 import json
 
 import pytest
 from fastapi.testclient import TestClient
 
-from apps.mindhigh.routes.marketing_routes import knowledge_service
+from apps.mindhigh.marketing_app import create_marketing_app
+from apps.mindhigh.routes.marketing_routes import campaign_limiter, knowledge_service
 from mh_core.knowledge.governed_bundle import git_blob_sha1
-from mh_core.marketing_app import create_marketing_app
 
 
 SERVICE_KEY = "e" * 48
 CAMPAIGN_PATH = "/mindhigh/marketing/campaigns/draft"
+REQUIRED_IDS = ("brand", "marketing_strategy", "offer", "agent_rules")
 
 
 def _headers() -> dict[str, str]:
@@ -36,9 +38,9 @@ def _brief() -> dict:
     }
 
 
-def _write_bundle(path) -> None:
+def _write_bundle(path, document_ids=REQUIRED_IDS) -> None:
     documents = []
-    for document_id in ("brand", "marketing_strategy", "offer", "agent_rules"):
+    for document_id in document_ids:
         content = f"Contenido aprobado para campañas: {document_id}."
         documents.append(
             {
@@ -87,8 +89,10 @@ def clean_runtime(monkeypatch):
     ):
         monkeypatch.delenv(name, raising=False)
     knowledge_service.reset()
+    campaign_limiter.reset()
     yield
     knowledge_service.reset()
+    campaign_limiter.reset()
 
 
 def test_produccion_expone_solo_salud_y_marketing():
@@ -140,6 +144,18 @@ def test_readiness_rechaza_credencial_debil(tmp_path, monkeypatch):
     assert response.status_code == 503
 
 
+def test_readiness_exige_documentos_esenciales_exactos(tmp_path, monkeypatch):
+    bundle = tmp_path / "approved-bundle.json"
+    _write_bundle(bundle, ("brand", "marketing_strategy", "offer", "faq"))
+    monkeypatch.setenv("MH_KNOWLEDGE_BUNDLE_PATH", str(bundle))
+    monkeypatch.setenv("MH_CORE_EJIXHOLE_KEY", SERVICE_KEY)
+    knowledge_service.reset()
+
+    response = TestClient(create_marketing_app("production")).get("/health/ready")
+
+    assert response.status_code == 503
+
+
 def test_rechaza_cuerpo_de_campana_mayor_a_64_kib():
     client = TestClient(create_marketing_app("production"))
 
@@ -153,14 +169,73 @@ def test_rechaza_cuerpo_de_campana_mayor_a_64_kib():
     assert response.json()["detail"] == "Solicitud demasiado grande."
 
 
-def test_limita_bucle_de_generacion_por_identidad_y_origen():
+def test_rechaza_cuerpo_fragmentado_sin_content_length():
+    application = create_marketing_app("production")
+    sent: list[dict] = []
+    chunks = iter(
+        [
+            {"type": "http.request", "body": b"a" * 40_000, "more_body": True},
+            {"type": "http.request", "body": b"b" * 30_000, "more_body": False},
+        ]
+    )
+
+    async def receive():
+        return next(chunks)
+
+    async def send(message):
+        sent.append(message)
+
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "POST",
+        "scheme": "https",
+        "path": CAMPAIGN_PATH,
+        "raw_path": CAMPAIGN_PATH.encode(),
+        "query_string": b"",
+        "root_path": "",
+        "headers": [(b"content-type", b"application/json")],
+        "client": ("127.0.0.1", 1234),
+        "server": ("testserver", 443),
+    }
+
+    asyncio.run(application(scope, receive, send))
+
+    start = next(message for message in sent if message["type"] == "http.response.start")
+    assert start["status"] == 413
+
+
+def test_identidades_no_autenticadas_no_crean_buckets(monkeypatch):
+    monkeypatch.setenv("MH_CORE_EJIXHOLE_KEY", SERVICE_KEY)
     client = TestClient(create_marketing_app("production"))
 
-    responses = [client.post(CAMPAIGN_PATH, json={}) for _ in range(31)]
+    responses = [
+        client.post(
+            CAMPAIGN_PATH,
+            json=_brief(),
+            headers={"X-Service-ID": f"inventada-{index}", "X-API-Key": "incorrecta"},
+        )
+        for index in range(50)
+    ]
+
+    assert all(response.status_code == 401 for response in responses)
+    assert not campaign_limiter._llamadas
+
+
+def test_limita_bucle_de_identidad_autenticada(monkeypatch):
+    monkeypatch.setenv("MH_CORE_EJIXHOLE_KEY", SERVICE_KEY)
+    client = TestClient(create_marketing_app("production"))
+
+    responses = [
+        client.post(CAMPAIGN_PATH, json=_brief(), headers=_headers())
+        for _ in range(31)
+    ]
 
     assert all(response.status_code != 429 for response in responses[:30])
     assert responses[30].status_code == 429
     assert int(responses[30].headers["retry-after"]) >= 1
+    assert set(campaign_limiter._llamadas) == {"ejixhole-backend"}
 
 
 def test_runtime_listo_genera_campana_citable(tmp_path, monkeypatch):
