@@ -4,7 +4,8 @@ from pathlib import Path
 def test_render_inicia_runtime_minimo_gratuito_con_un_worker():
     blueprint = Path("render.yaml").read_text(encoding="utf-8")
 
-    assert "mh_core.marketing_app:app" in blueprint
+    assert "apps.mindhigh.marketing_app:app" in blueprint
+    assert "mh_core.marketing_app:app" not in blueprint
     assert "--workers 1" in blueprint
     assert "plan: free" in blueprint
     assert "healthCheckPath: /health/ready" in blueprint
