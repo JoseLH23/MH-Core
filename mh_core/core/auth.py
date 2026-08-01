@@ -17,11 +17,26 @@ def _service_table() -> dict[str, tuple[str, frozenset[str]]]:
     definitions = {
         "ejixhole-backend": (
             os.environ.get("MH_CORE_EJIXHOLE_KEY", ""),
-            frozenset({"core.read", "ejixhole.read", "ejixhole.execute"}),
+            frozenset(
+                {
+                    "core.read",
+                    "knowledge.read",
+                    "mindhigh.campaigns",
+                    "ejixhole.read",
+                    "ejixhole.execute",
+                }
+            ),
         ),
         "mindhigh-worker": (
             os.environ.get("MH_CORE_MINDHIGH_KEY", ""),
-            frozenset({"core.read", "knowledge.read", "mindhigh.execute"}),
+            frozenset(
+                {
+                    "core.read",
+                    "knowledge.read",
+                    "mindhigh.campaigns",
+                    "mindhigh.execute",
+                }
+            ),
         ),
         "operations": (
             os.environ.get("MH_CORE_OPERATIONS_KEY", ""),
@@ -30,6 +45,7 @@ def _service_table() -> dict[str, tuple[str, frozenset[str]]]:
                     "core.read",
                     "core.admin",
                     "knowledge.read",
+                    "mindhigh.campaigns",
                     "mindhigh.execute",
                     "ejixhole.read",
                     "ejixhole.execute",
