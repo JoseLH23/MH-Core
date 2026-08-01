@@ -1,12 +1,14 @@
 from pathlib import Path
 
 
-def test_render_inicia_runtime_minimo_con_un_worker():
+def test_render_inicia_runtime_minimo_gratuito_con_un_worker():
     blueprint = Path("render.yaml").read_text(encoding="utf-8")
 
     assert "mh_core.marketing_app:app" in blueprint
     assert "--workers 1" in blueprint
+    assert "plan: free" in blueprint
     assert "healthCheckPath: /health/ready" in blueprint
+    assert "autoDeployTrigger: checksPass" in blueprint
     assert "MH_ENVIRONMENT" in blueprint
     assert "value: production" in blueprint
     assert "MH_CORE_ALLOW_LEGACY_API_KEY" in blueprint
