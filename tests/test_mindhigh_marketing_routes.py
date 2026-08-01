@@ -13,10 +13,13 @@ from mh_core.knowledge.governed_bundle import git_blob_sha1
 client = TestClient(app)
 
 
-def _headers() -> dict[str, str]:
+def _headers(
+    service_id: str = "mindhigh-worker",
+    api_key: str = "mindhigh-marketing-test-key",
+) -> dict[str, str]:
     return {
-        "X-Service-ID": "mindhigh-worker",
-        "X-API-Key": "mindhigh-marketing-test-key",
+        "X-Service-ID": service_id,
+        "X-API-Key": api_key,
     }
 
 
@@ -110,6 +113,24 @@ def test_genera_borrador_con_citas_y_aprobacion_humana(tmp_path, monkeypatch):
     assert len(body["knowledge_citations"]) == 4
     assert all(citation.startswith("mhk://ejixhole/") for citation in body["knowledge_citations"])
     assert len(body["contents"]) == 2
+
+
+def test_ejixhole_backend_puede_generar_campanas_sin_recibir_ejecucion_general(tmp_path, monkeypatch):
+    bundle_path = tmp_path / "approved-bundle.json"
+    _write_bundle(bundle_path)
+    monkeypatch.setenv("MH_KNOWLEDGE_BUNDLE_PATH", str(bundle_path))
+    monkeypatch.setenv("MH_CORE_EJIXHOLE_KEY", "ejixhole-marketing-test-key")
+    headers = _headers("ejixhole-backend", "ejixhole-marketing-test-key")
+
+    campaign = client.post(
+        "/mindhigh/marketing/campaigns/draft",
+        json=_brief(),
+        headers=headers,
+    )
+    general_run = client.post("/mindhigh/run", headers=headers)
+
+    assert campaign.status_code == 200
+    assert general_run.status_code == 403
 
 
 def test_falla_cerrado_sin_bundle(monkeypatch):
