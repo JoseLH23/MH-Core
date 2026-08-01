@@ -40,3 +40,11 @@ class RateLimiter:
                 return 0.0
             mas_antigua = min(llamadas)
             return max(0.0, self.ventana_segundos - (time.time() - mas_antigua))
+
+    def reset(self, clave: str | None = None) -> None:
+        """Limpia estado de forma thread-safe para pruebas o recuperación local."""
+        with self._lock:
+            if clave is None:
+                self._llamadas.clear()
+            else:
+                self._llamadas.pop(clave, None)
