@@ -25,5 +25,8 @@ def knowledge_search(
 ):
     try:
         return service.search(q, category=category, limit=limit)
-    except KnowledgeUnavailableError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except KnowledgeUnavailableError:
+        raise HTTPException(
+            status_code=503,
+            detail="El conocimiento aprobado no está disponible.",
+        )
