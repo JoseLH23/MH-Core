@@ -19,9 +19,13 @@ from apps.mindhigh.routes.marketing_routes import (  # noqa: E402
     router as marketing_router,
 )
 from mh_core.core.auth import requerir_scopes  # noqa: E402
+from mh_core.core.rate_limiter import RateLimiter  # noqa: E402
 
 _MIN_SERVICE_KEY_LENGTH = 32
 _REQUIRED_MARKETING_DOCUMENTS = 4
+_MAX_CAMPAIGN_BODY_BYTES = 64 * 1024
+_MAX_CAMPAIGNS_PER_MINUTE = 30
+_CAMPAIGN_PATH = "/mindhigh/marketing/campaigns/draft"
 
 
 def _production(environment: str | None = None) -> bool:
@@ -44,6 +48,10 @@ def _runtime_ready() -> bool:
 def create_marketing_app(environment: str | None = None) -> FastAPI:
     """Construye el runtime aislado; útil para producción y pruebas."""
     production = _production(environment)
+    campaign_limiter = RateLimiter(
+        max_llamadas=_MAX_CAMPAIGNS_PER_MINUTE,
+        ventana_segundos=60,
+    )
     application = FastAPI(
         title="MindHigh Marketing",
         version="1.0.0",
@@ -53,7 +61,28 @@ def create_marketing_app(environment: str | None = None) -> FastAPI:
     )
 
     @application.middleware("http")
-    async def security_headers(request: Request, call_next):
+    async def protect_campaign_endpoint(request: Request, call_next):
+        if request.method == "POST" and request.url.path == _CAMPAIGN_PATH:
+            content_length = request.headers.get("content-length")
+            if content_length:
+                try:
+                    body_size = int(content_length)
+                except ValueError:
+                    return JSONResponse(status_code=400, content={"detail": "Solicitud inválida."})
+                if body_size < 0 or body_size > _MAX_CAMPAIGN_BODY_BYTES:
+                    return JSONResponse(status_code=413, content={"detail": "Solicitud demasiado grande."})
+
+            service_id = request.headers.get("x-service-id", "unknown")
+            client_host = request.client.host if request.client else "unknown"
+            limiter_key = f"{service_id}:{client_host}"
+            if not campaign_limiter.permitido(limiter_key):
+                retry_after = max(1, int(campaign_limiter.segundos_para_reintentar(limiter_key)))
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Demasiadas solicitudes."},
+                    headers={"Retry-After": str(retry_after)},
+                )
+
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
