@@ -9,11 +9,16 @@ from apps.mindhigh.models.marketing_campaign import (
 )
 from apps.mindhigh.services.marketing_campaign_service import (
     MarketingCampaignService,
+    MissingMarketingEvidenceError,
     UnsafeMarketingClaimError,
 )
 from mh_core.knowledge.ejixhole_knowledge import (
     EjixholeKnowledgeSnapshot,
     KnowledgeDocument,
+)
+from mh_core.knowledge.governed_bundle import (
+    GovernedKnowledgeBundle,
+    git_blob_sha1,
 )
 
 
@@ -44,6 +49,44 @@ def _snapshot(*, include_offer: bool = True) -> EjixholeKnowledgeSnapshot:
     )
 
 
+def _governed_bundle(*, include_offer: bool = True) -> GovernedKnowledgeBundle:
+    ids = ["brand", "marketing_strategy", "agent_rules"]
+    if include_offer:
+        ids.append("offer")
+    documents = []
+    for document_id in ids:
+        content = f"Contenido aprobado y trazable de {document_id}."
+        documents.append(
+            {
+                "id": document_id,
+                "path": f"01-brand/{document_id}.md",
+                "category": "marketing",
+                "document_version": "1.0.0",
+                "citation_id": f"mhk://ejixhole/{document_id}/2026.07.3",
+                "sensitivity": "internal",
+                "source_type": "owner_approved",
+                "source_reference": "fuente aprobada de prueba",
+                "checksum": git_blob_sha1(content),
+                "review_due_at": "2099-01-19",
+                "content": content,
+            }
+        )
+    return GovernedKnowledgeBundle.from_dict(
+        {
+            "schema_version": 1,
+            "knowledge_version": "2026.07.3",
+            "product": "EjiXhole",
+            "governance": {
+                "citation_required": True,
+                "unknown_fact_behavior": "POR CONFIRMAR",
+                "unapproved_behavior": "block",
+                "expired_behavior": "block",
+            },
+            "documents": documents,
+        }
+    )
+
+
 def _brief(**changes) -> CampaignBrief:
     values = {
         "name": "Escapada familiar de verano",
@@ -67,6 +110,13 @@ def test_genera_campana_multicanal_con_aprobacion_humana():
 
     assert campaign.name == "Escapada familiar de verano"
     assert campaign.knowledge_version == "2026.07.1"
+    assert campaign.knowledge_document_ids == (
+        "brand",
+        "marketing_strategy",
+        "offer",
+        "agent_rules",
+    )
+    assert campaign.knowledge_citations == ()
     assert campaign.requires_human_approval is True
     assert [content.channel for content in campaign.contents] == [
         MarketingChannel.FACEBOOK,
@@ -74,6 +124,29 @@ def test_genera_campana_multicanal_con_aprobacion_humana():
         MarketingChannel.WHATSAPP_STATUS,
     ]
     assert all("EjiXhole" in (content.body + content.headline) for content in campaign.contents)
+
+
+def test_campana_gobernada_conserva_una_cita_por_documento():
+    campaign = MarketingCampaignService(
+        _governed_bundle(),
+        require_citations=True,
+    ).generate(_brief())
+
+    assert campaign.knowledge_version == "2026.07.3"
+    assert campaign.knowledge_citations == (
+        "mhk://ejixhole/brand/2026.07.3",
+        "mhk://ejixhole/marketing_strategy/2026.07.3",
+        "mhk://ejixhole/offer/2026.07.3",
+        "mhk://ejixhole/agent_rules/2026.07.3",
+    )
+
+
+def test_fuente_legacy_no_puede_presentarse_como_citable():
+    with pytest.raises(MissingMarketingEvidenceError, match="cita válida"):
+        MarketingCampaignService(
+            _snapshot(),
+            require_citations=True,
+        ).generate(_brief())
 
 
 def test_adapta_el_contenido_al_canal():
