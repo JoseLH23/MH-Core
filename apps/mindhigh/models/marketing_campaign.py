@@ -63,6 +63,8 @@ class MarketingCampaign(BaseModel):
     offer_focus: str
     season: str
     knowledge_version: str
+    knowledge_document_ids: tuple[str, ...] = ()
+    knowledge_citations: tuple[str, ...] = ()
     requires_human_approval: bool = True
     dynamic_facts_used: tuple[str, ...] = ()
     contents: tuple[ChannelContent, ...]
