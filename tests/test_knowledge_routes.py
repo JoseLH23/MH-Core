@@ -40,7 +40,7 @@ def _write_bundle(path) -> None:
                 "source_type": "owner_approved",
                 "source_reference": "FAQ aprobada de prueba",
                 "checksum": git_blob_sha1(content),
-                "review_due_at": "2027-01-19",
+                "review_due_at": "2099-01-19",
                 "content": content,
             }
         ],
@@ -116,6 +116,29 @@ def test_mindhigh_consulta_contexto_citable(tmp_path, monkeypatch):
     assert body["knowledge_version"] == "2026.07.3"
     assert body["documents"][0]["id"] == "faq"
     assert body["documents"][0]["citation_id"] == "mhk://ejixhole/faq/2026.07.3"
+
+
+def test_bundle_corrupto_devuelve_indisponibilidad_segura(tmp_path, monkeypatch):
+    bundle_path = tmp_path / "approved-bundle.json"
+    bundle_path.write_bytes(b"\xff\xfe")
+    monkeypatch.setenv("MH_KNOWLEDGE_BUNDLE_PATH", str(bundle_path))
+    monkeypatch.setenv("MH_CORE_MINDHIGH_KEY", "mindhigh-test-key")
+
+    status = client.get(
+        "/knowledge/status",
+        headers=_headers("mindhigh-worker", "mindhigh-test-key"),
+    )
+    response = client.get(
+        "/knowledge/search",
+        params={"q": "camping"},
+        headers=_headers("mindhigh-worker", "mindhigh-test-key"),
+    )
+
+    assert status.status_code == 200
+    assert status.json()["configured"] is True
+    assert status.json()["available"] is False
+    assert response.status_code == 503
+    assert response.json()["detail"] == "El conocimiento aprobado no está disponible."
 
 
 def test_ejixhole_backend_no_recibe_scope_de_conocimiento(tmp_path, monkeypatch):
