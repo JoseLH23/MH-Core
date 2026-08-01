@@ -21,11 +21,20 @@ def _service_table() -> dict[str, tuple[str, frozenset[str]]]:
         ),
         "mindhigh-worker": (
             os.environ.get("MH_CORE_MINDHIGH_KEY", ""),
-            frozenset({"core.read", "mindhigh.execute"}),
+            frozenset({"core.read", "knowledge.read", "mindhigh.execute"}),
         ),
         "operations": (
             os.environ.get("MH_CORE_OPERATIONS_KEY", ""),
-            frozenset({"core.read", "core.admin", "mindhigh.execute", "ejixhole.read", "ejixhole.execute"}),
+            frozenset(
+                {
+                    "core.read",
+                    "core.admin",
+                    "knowledge.read",
+                    "mindhigh.execute",
+                    "ejixhole.read",
+                    "ejixhole.execute",
+                }
+            ),
         ),
     }
     return {name: value for name, value in definitions.items() if value[0]}

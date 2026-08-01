@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 
 import pytest
 
@@ -98,6 +99,25 @@ def test_rechaza_gobierno_permisivo():
 
     with pytest.raises(KnowledgeBundleError, match="no aprobado"):
         GovernedKnowledgeBundle.from_dict(payload)
+
+
+def test_rechaza_documento_con_revision_vencida():
+    document = _document("faq", "Contenido aprobado")
+    document["review_due_at"] = "2026-01-01"
+
+    with pytest.raises(KnowledgeBundleError, match="requiere revisión"):
+        GovernedKnowledgeBundle.from_dict(
+            _bundle(document),
+            today=date(2026, 8, 1),
+        )
+
+
+def test_rechaza_bundle_no_utf8(tmp_path):
+    bundle_path = tmp_path / "approved-bundle.json"
+    bundle_path.write_bytes(b"\xff\xfe")
+
+    with pytest.raises(KnowledgeBundleError, match="No se pudo leer"):
+        GovernedKnowledgeBundle.from_file(bundle_path)
 
 
 def test_contadores_anteriores_siguen_funcionando(tmp_path):
