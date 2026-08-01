@@ -203,7 +203,10 @@ def test_rechaza_cuerpo_fragmentado_sin_content_length():
     asyncio.run(application(scope, receive, send))
 
     start = next(message for message in sent if message["type"] == "http.response.start")
+    response_headers = {key.lower(): value for key, value in start["headers"]}
     assert start["status"] == 413
+    assert response_headers[b"cache-control"] == b"no-store"
+    assert response_headers[b"x-content-type-options"] == b"nosniff"
 
 
 def test_identidades_no_autenticadas_no_crean_buckets(monkeypatch):
