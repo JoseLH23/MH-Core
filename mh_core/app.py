@@ -26,6 +26,7 @@ from mh_core.routes.ejixhole_predictions_routes import router as ejixhole_predic
 app = FastAPI(title="MindHigh Core", version="1.0")
 _core_read = [Depends(requerir_scopes("core.read"))]
 _knowledge_read = [Depends(requerir_scopes("knowledge.read"))]
+_mindhigh_campaigns = [Depends(requerir_scopes("mindhigh.campaigns"))]
 _mindhigh_execute = [Depends(requerir_scopes("mindhigh.execute"))]
 _ejixhole_read = [Depends(requerir_scopes("ejixhole.read"))]
 
@@ -38,7 +39,7 @@ app.include_router(knowledge_router, dependencies=_knowledge_read)
 app.include_router(automation_router, dependencies=_mindhigh_execute)
 app.include_router(agent_router, dependencies=_mindhigh_execute)
 app.include_router(mindhigh_router, dependencies=_mindhigh_execute)
-app.include_router(mindhigh_marketing_router, dependencies=_mindhigh_execute)
+app.include_router(mindhigh_marketing_router, dependencies=_mindhigh_campaigns)
 app.include_router(mindhigh_orchestrator_router, dependencies=_mindhigh_execute)
 app.include_router(video_router, dependencies=_mindhigh_execute)
 app.include_router(mindhigh_agent_router, dependencies=_mindhigh_execute)

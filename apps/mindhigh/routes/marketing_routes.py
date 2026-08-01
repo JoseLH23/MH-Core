@@ -18,6 +18,18 @@ router = APIRouter(prefix="/mindhigh/marketing", tags=["MindHigh Marketing"])
 knowledge_service = GovernedKnowledgeService()
 
 
+@router.get("/status")
+def marketing_status() -> dict:
+    """Estado mínimo para clientes autorizados a preparar campañas."""
+    status = knowledge_service.status()
+    return {
+        "configured": status["configured"],
+        "available": status["available"],
+        "knowledge_version": status["knowledge_version"],
+        "documents": status["documents"],
+    }
+
+
 @router.post("/campaigns/draft", response_model=MarketingCampaign)
 def create_campaign_draft(brief: CampaignBrief) -> MarketingCampaign:
     if brief.approved_dynamic_facts:
