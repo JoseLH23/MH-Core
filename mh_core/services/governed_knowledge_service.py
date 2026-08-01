@@ -24,6 +24,14 @@ class GovernedKnowledgeService:
         self._last_error: str | None = None
         self._lock = RLock()
 
+    def reset(self) -> None:
+        """Limpia la caché para recargar configuración o rotar el bundle."""
+        with self._lock:
+            self._bundle = None
+            self._loaded_path = None
+            self._loaded_mtime_ns = None
+            self._last_error = None
+
     def _configured_path(self) -> Path | None:
         if self._explicit_path is not None:
             return self._explicit_path
