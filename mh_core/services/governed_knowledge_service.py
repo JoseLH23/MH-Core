@@ -71,6 +71,10 @@ class GovernedKnowledgeService:
             self._last_error = None
             return bundle
 
+    def load_bundle(self) -> GovernedKnowledgeBundle:
+        """Devuelve el bundle validado para consumidores internos de MH-Core."""
+        return self._load()
+
     def status(self) -> dict[str, Any]:
         path = self._configured_path()
         if path is None:
