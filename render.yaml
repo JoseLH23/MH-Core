@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: mh-core-marketing
+    runtime: python
+    buildCommand: pip install -r requirements-marketing.txt
+    startCommand: python -m uvicorn mh_core.marketing_app:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health/ready
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.15
+      - key: MH_ENVIRONMENT
+        value: production
+      - key: MH_CORE_ALLOW_LEGACY_API_KEY
+        value: "false"
+      - key: MH_KNOWLEDGE_BUNDLE_PATH
+        value: /etc/secrets/approved-bundle.json
+      - key: MH_CORE_EJIXHOLE_KEY
+        sync: false
