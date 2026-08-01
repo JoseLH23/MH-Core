@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -75,16 +76,26 @@ class GovernedKnowledgeBundle:
         self._by_id = {document.id: document for document in documents}
 
     @classmethod
-    def from_file(cls, path: str | Path) -> "GovernedKnowledgeBundle":
+    def from_file(
+        cls,
+        path: str | Path,
+        *,
+        today: date | None = None,
+    ) -> "GovernedKnowledgeBundle":
         bundle_path = Path(path)
         try:
             payload = json.loads(bundle_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            raise KnowledgeBundleError(f"No se pudo leer el bundle gobernado: {exc}") from exc
-        return cls.from_dict(payload)
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise KnowledgeBundleError("No se pudo leer el bundle gobernado.") from exc
+        return cls.from_dict(payload, today=today)
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "GovernedKnowledgeBundle":
+    def from_dict(
+        cls,
+        payload: dict[str, Any],
+        *,
+        today: date | None = None,
+    ) -> "GovernedKnowledgeBundle":
         if not isinstance(payload, dict):
             raise KnowledgeBundleError("El bundle debe ser un objeto JSON.")
         if payload.get("schema_version") != 1:
@@ -111,6 +122,7 @@ class GovernedKnowledgeBundle:
         if not isinstance(raw_documents, list) or not raw_documents:
             raise KnowledgeBundleError("documents debe ser una lista no vacía.")
 
+        current_date = today or date.today()
         documents: list[ApprovedKnowledgeDocument] = []
         seen_ids: set[str] = set()
         seen_citations: set[str] = set()
@@ -132,6 +144,17 @@ class GovernedKnowledgeBundle:
                         f"documents[{index}].{field} debe ser texto no vacío."
                     )
                 values[field] = value
+
+            try:
+                review_due = date.fromisoformat(values["review_due_at"])
+            except ValueError as exc:
+                raise KnowledgeBundleError(
+                    f"documents[{index}].review_due_at debe usar YYYY-MM-DD."
+                ) from exc
+            if review_due < current_date:
+                raise KnowledgeBundleError(
+                    f"El documento {values['id']} requiere revisión desde {review_due}."
+                )
 
             document_path = Path(values["path"])
             if document_path.is_absolute() or ".." in document_path.parts:
