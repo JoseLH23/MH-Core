@@ -115,13 +115,14 @@ def test_genera_borrador_con_citas_y_aprobacion_humana(tmp_path, monkeypatch):
     assert len(body["contents"]) == 2
 
 
-def test_ejixhole_backend_puede_generar_campanas_sin_recibir_ejecucion_general(tmp_path, monkeypatch):
+def test_ejixhole_backend_ve_estado_y_genera_sin_ejecucion_general(tmp_path, monkeypatch):
     bundle_path = tmp_path / "approved-bundle.json"
     _write_bundle(bundle_path)
     monkeypatch.setenv("MH_KNOWLEDGE_BUNDLE_PATH", str(bundle_path))
     monkeypatch.setenv("MH_CORE_EJIXHOLE_KEY", "ejixhole-marketing-test-key")
     headers = _headers("ejixhole-backend", "ejixhole-marketing-test-key")
 
+    status = client.get("/mindhigh/marketing/status", headers=headers)
     campaign = client.post(
         "/mindhigh/marketing/campaigns/draft",
         json=_brief(),
@@ -129,6 +130,13 @@ def test_ejixhole_backend_puede_generar_campanas_sin_recibir_ejecucion_general(t
     )
     general_run = client.post("/mindhigh/run", headers=headers)
 
+    assert status.status_code == 200
+    assert status.json() == {
+        "configured": True,
+        "available": True,
+        "knowledge_version": "2026.07.3",
+        "documents": 4,
+    }
     assert campaign.status_code == 200
     assert general_run.status_code == 403
 
